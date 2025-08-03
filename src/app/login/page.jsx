@@ -1,7 +1,8 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Zap, Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ export default function LoginPage() {
   const [emailSent, setEmailSent] = useState(false);
 
   // Function to create user record if it doesn't exist
-  const createUserIfNotExists = async (userEmail) => {
+  const createUserIfNotExists = useCallback(async (userEmail) => {
     try {
       // Check if user already exists
       const { data: existingUser, error: fetchError } = await supabase
@@ -47,7 +48,7 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Error in createUserIfNotExists:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -74,7 +75,7 @@ export default function LoginPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [createUserIfNotExists]);
 
   const handleBack = () => {
     window.location.href = '/';
@@ -150,11 +151,14 @@ export default function LoginPage() {
             
             <div className="flex items-center space-x-3">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-              <img 
-          src="/logo.png" 
-          alt="NapStopper Logo" 
-          className="w-6 h-6 object-contain"
-        />              </div>
+                <Image 
+                  src="/logo.png" 
+                  alt="NapStopper Logo" 
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
+              </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 NapStopper
               </h1>
@@ -177,7 +181,7 @@ export default function LoginPage() {
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
                 <p className="text-gray-600">
-                  Enter your email and we'll send you a magic link to sign in
+                  Enter your email and we&apos;ll send you a magic link to sign in
                 </p>
               </div>
 
@@ -237,7 +241,7 @@ export default function LoginPage() {
 
               <div className="mt-8 text-center">
                 <p className="text-sm text-gray-500">
-                  No password required. We'll send you a secure link to access your account.
+                  No password required. We&apos;ll send you a secure link to access your account.
                 </p>
               </div>
             </div>
@@ -249,13 +253,13 @@ export default function LoginPage() {
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Check Your Email</h2>
               <p className="text-gray-600 mb-6">
-                We've sent a magic link to <strong>{email}</strong>. 
+                We&apos;ve sent a magic link to <strong>{email}</strong>. 
                 Click the link in your email to sign in to your account.
               </p>
               
               <div className="space-y-4">
                 <p className="text-sm text-gray-500">
-                  Didn't receive the email? Check your spam folder or try again.
+                  Didn&apos;t receive the email? Check your spam folder or try again.
                 </p>
                 
                 <button
@@ -303,11 +307,14 @@ export default function LoginPage() {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-3">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-1.5 rounded-lg">
-              <img 
-          src="/logo.png" 
-          alt="NapStopper Logo" 
-          className="w-6 h-6 object-contain"
-        />              </div>
+                <Image 
+                  src="/logo.png" 
+                  alt="NapStopper Logo" 
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
+              </div>
               <h3 className="text-lg font-bold">NapStopper</h3>
             </div>
             <p className="text-gray-400 text-sm">

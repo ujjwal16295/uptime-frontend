@@ -1,7 +1,8 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Clock, Code, Globe, CheckCircle, Copy, Server, User, LogOut, Gift, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
+import Image from 'next/image';
 
 export default function KeepAlivePingService() {
   const [selectedLanguage, setSelectedLanguage] = useState('nodejs');
@@ -17,6 +18,30 @@ export default function KeepAlivePingService() {
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  // Function to fetch user credit from backend
+  const fetchUserCredit = useCallback(async (email) => {
+    setLoadingCredit(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserCredit(data.data.credit);
+      } else if (response.status === 404) {
+        // User not found, set default credit
+        setUserCredit(21600);
+      } else {
+        console.error('Failed to fetch user credit');
+        setUserCredit(21600); // Fallback to default
+      }
+    } catch (error) {
+      console.error('Error fetching user credit:', error);
+      setUserCredit(21600); // Fallback to default
+    } finally {
+      setLoadingCredit(false);
+    }
+  }, [API_BASE_URL]);
 
   // Check authentication status
   useEffect(() => {
@@ -47,31 +72,7 @@ export default function KeepAlivePingService() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  // Function to fetch user credit from backend
-  const fetchUserCredit = async (email) => {
-    setLoadingCredit(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUserCredit(data.data.credit);
-      } else if (response.status === 404) {
-        // User not found, set default credit
-        setUserCredit(21600);
-      } else {
-        console.error('Failed to fetch user credit');
-        setUserCredit(21600); // Fallback to default
-      }
-    } catch (error) {
-      console.error('Error fetching user credit:', error);
-      setUserCredit(21600); // Fallback to default
-    } finally {
-      setLoadingCredit(false);
-    }
-  };
+  }, [fetchUserCredit]);
 
   const codeExamples = {
     nodejs: `app.get('/api/health', (req, res) => {
@@ -160,7 +161,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
       if (response.ok) {
         setSubmitMessage({
           type: 'success',
-          text: data.message || 'Your application has been added successfully! We\'ll start pinging it every 10 minutes.'
+          text: data.message || 'Your application has been added successfully! We&apos;ll start pinging it every 10 minutes.'
         });
         setBackendUrl(''); // Clear the input
         
@@ -244,10 +245,12 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             {/* Centered Title */}
             <div className="flex items-center space-x-3">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <img 
+                <Image 
                   src="/logo.png" 
                   alt="NapStopper Logo" 
-                  className="w-6 h-6 object-contain"
+                  width={24}
+                  height={24}
+                  className="object-contain"
                 />
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
@@ -363,7 +366,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                 <h3 className="text-xl font-bold text-green-800">Get Started Free!</h3>
               </div>
               <p className="text-green-700 mb-4">
-                Login to get <strong>21,600 minutes</strong> of free credits - that's <strong>15 days</strong> of continuous pinging!
+                Login to get <strong>21,600 minutes</strong> of free credits - that&apos;s <strong>15 days</strong> of continuous pinging!
               </p>
               <button
                 onClick={handleLogin}
@@ -501,7 +504,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             
             <div className="ml-12">
               <p className="text-gray-600 mb-6">
-                Enter your backend URL below and we'll start pinging it every 10 minutes:
+                Enter your backend URL below and we&apos;ll start pinging it every 10 minutes:
               </p>
               
               <div className="max-w-2xl">
@@ -525,7 +528,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                           </span>
                         ) : hasZeroCredits ? (
                           <span className="text-red-600 font-medium">
-                            You need credits to add applications. Click "Get Credits" to purchase more.
+                            You need credits to add applications. Click &ldquo;Get Credits&rdquo; to purchase more.
                           </span>
                         ) : (
                           "Make sure to include the full URL to your health endpoint"
@@ -580,10 +583,12 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <img 
+                <Image 
                   src="/logo.png" 
                   alt="NapStopper Logo" 
-                  className="w-6 h-6 object-contain"
+                  width={24}
+                  height={24}
+                  className="object-contain"
                 />
               </div>
               <h3 className="text-2xl font-bold">NapStopper</h3>

@@ -1,7 +1,8 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Gift, Zap, User, LogOut, ArrowLeft, CheckCircle, Clock, Globe, Server } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
+import Image from 'next/image';
 
 export default function CreditPage() {
   const [user, setUser] = useState(null);
@@ -14,6 +15,30 @@ export default function CreditPage() {
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  // Function to fetch user credit from backend
+  const fetchUserCredit = useCallback(async (email) => {
+    setLoadingCredit(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUserCredit(data.data.credit);
+      } else if (response.status === 404) {
+        // User not found, set default credit
+        setUserCredit(0);
+      } else {
+        console.error('Failed to fetch user credit');
+        setUserCredit(0); // Fallback
+      }
+    } catch (error) {
+      console.error('Error fetching user credit:', error);
+      setUserCredit(0); // Fallback
+    } finally {
+      setLoadingCredit(false);
+    }
+  }, [API_BASE_URL]);
 
   // Check authentication status
   useEffect(() => {
@@ -56,31 +81,7 @@ export default function CreditPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  // Function to fetch user credit from backend
-  const fetchUserCredit = async (email) => {
-    setLoadingCredit(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUserCredit(data.data.credit);
-      } else if (response.status === 404) {
-        // User not found, set default credit
-        setUserCredit(0);
-      } else {
-        console.error('Failed to fetch user credit');
-        setUserCredit(0); // Fallback
-      }
-    } catch (error) {
-      console.error('Error fetching user credit:', error);
-      setUserCredit(0); // Fallback
-    } finally {
-      setLoadingCredit(false);
-    }
-  };
+  }, [fetchUserCredit]);
 
   // Function to add credits
   const handleAddCredit = async () => {
@@ -287,7 +288,7 @@ export default function CreditPage() {
                   minutes remaining
                 </div>
                 <div className="text-sm text-gray-500 mt-2">
-                  That's approximately <strong>{convertMinutesToDays(userCredit)}</strong> of continuous monitoring
+                  That&apos;s approximately <strong>{convertMinutesToDays(userCredit)}</strong> of continuous monitoring
                 </div>
               </div>
             )}
@@ -401,11 +402,14 @@ export default function CreditPage() {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
               <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-              <img 
-          src="/logo.png" 
-          alt="NapStopper Logo" 
-          className="w-6 h-6 object-contain"
-        />              </div>
+                <Image 
+                  src="/logo.png" 
+                  alt="NapStopper Logo" 
+                  width={24}
+                  height={24}
+                  className="object-contain"
+                />
+              </div>
               <h3 className="text-2xl font-bold">NapStopper</h3>
             </div>
             <p className="text-gray-400 mb-6">
