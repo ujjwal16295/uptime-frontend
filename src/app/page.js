@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Clock, Code, Globe, CheckCircle, Copy, Server, User, LogOut, Gift, AlertCircle } from 'lucide-react';
+import { Shield, Clock, Code, Globe, CheckCircle, Copy, Server, User, LogOut, Gift, AlertCircle, ChevronDown, Info, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import Image from 'next/image';
 
@@ -13,6 +13,7 @@ export default function KeepAlivePingService() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false); // New state for more menu
   const [userCredit, setUserCredit] = useState(null);
   const [loadingCredit, setLoadingCredit] = useState(false);
 
@@ -192,6 +193,16 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
     window.location.href = '/credit';
   };
 
+  const handleAboutUs = () => {
+    window.location.href = '/aboutus';
+    setShowMoreMenu(false);
+  };
+
+  const handleContactUs = () => {
+    window.location.href = '/contactus';
+    setShowMoreMenu(false);
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setShowUserMenu(false);
@@ -258,7 +269,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
               </h1>
             </div>
             
-            {/* Right side - Login button or User menu */}
+            {/* Right side - More dropdown, Login button or User menu */}
             <div className="flex items-center space-x-4">
               {loading ? (
                 <div className="w-8 h-8 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
@@ -294,29 +305,65 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center space-x-3">
-                  <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    <Gift className="w-4 h-4" />
-                    <span>Get 21,600 min free!</span>
+                <>
+                  {/* More Menu Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowMoreMenu(!showMoreMenu)}
+                      className="flex items-center space-x-2 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="text-gray-700 font-medium">More</span>
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    </button>
+                    
+                    {/* More Dropdown Menu */}
+                    {showMoreMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <button
+                          onClick={handleAboutUs}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                        >
+                          <Info className="w-4 h-4" />
+                          <span>About Us</span>
+                        </button>
+                        <button
+                          onClick={handleContactUs}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                        >
+                          <Mail className="w-4 h-4" />
+                          <span>Contact Us</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={handleLogin}
-                    className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-700 hover:to-amber-700 transition-all duration-200"
-                  >
-                    Login
-                  </button>
-                </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                      <Gift className="w-4 h-4" />
+                      <span>Get 21,600 min free!</span>
+                    </div>
+                    <button
+                      onClick={handleLogin}
+                      className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-700 hover:to-amber-700 transition-all duration-200"
+                    >
+                      Login
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Click outside to close menu */}
-      {showUserMenu && (
+      {/* Click outside to close menus */}
+      {(showUserMenu || showMoreMenu) && (
         <div 
           className="fixed inset-0 z-40" 
-          onClick={() => setShowUserMenu(false)}
+          onClick={() => {
+            setShowUserMenu(false);
+            setShowMoreMenu(false);
+          }}
         ></div>
       )}
 
