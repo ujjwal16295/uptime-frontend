@@ -225,8 +225,6 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       {/* Header */}
-      // Replace your header section with this updated version:
-
 <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
   <div className="max-w-6xl mx-auto px-4 py-4">
     <div className="flex items-center justify-between">
