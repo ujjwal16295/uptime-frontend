@@ -1,44 +1,67 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Gift, Zap, User, LogOut, ArrowLeft, CheckCircle, Clock, Globe, Server } from 'lucide-react';
+import { Gift, CheckCircle, Clock, Globe, Server } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
-import Image from 'next/image';
+import { ChangeCredit } from '../../store/CreditSlice'; // Adjust path as needed
 
 export default function CreditPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userCredit, setUserCredit] = useState(null);
   const [loadingCredit, setLoadingCredit] = useState(false);
   const [isAddingCredit, setIsAddingCredit] = useState(false);
   const [addCreditMessage, setAddCreditMessage] = useState(null);
+
+  // Redux state and dispatch
+  const dispatch = useDispatch();
+  const { creditDetails, success } = useSelector((state) => state.credit);
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   // Function to fetch user credit from backend
   const fetchUserCredit = useCallback(async (email) => {
+    // Don't fetch if already successful
+    if (success) {
+      return;
+    }
+
     setLoadingCredit(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
       
       if (response.ok) {
         const data = await response.json();
-        setUserCredit(data.data.credit);
+        // Update Redux store with fetched credit and mark as successful
+        dispatch(ChangeCredit({ 
+          creditDetails: data.data.credit, 
+          success: true 
+        }));
       } else if (response.status === 404) {
-        // User not found, set default credit
-        setUserCredit(0);
+        // User not found, set default credit and mark as successful
+        dispatch(ChangeCredit({ 
+          creditDetails: 0, 
+          success: true 
+        }));
       } else {
         console.error('Failed to fetch user credit');
-        setUserCredit(0); // Fallback
+        // Keep success as false and set default credit
+        dispatch(ChangeCredit({ 
+          creditDetails: 21600, 
+          success: false 
+        }));
       }
     } catch (error) {
       console.error('Error fetching user credit:', error);
-      setUserCredit(0); // Fallback
+      // Keep success as false and set default credit
+      dispatch(ChangeCredit({ 
+        creditDetails: 21600, 
+        success: false 
+      }));
     } finally {
       setLoadingCredit(false);
     }
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, dispatch, success]);
 
   // Check authentication status
   useEffect(() => {
@@ -76,12 +99,16 @@ export default function CreditPage() {
       if (session?.user?.email) {
         fetchUserCredit(session.user.email);
       } else {
-        setUserCredit(null);
+        // Reset credit state
+        dispatch(ChangeCredit({ 
+          creditDetails: 21600, 
+          success: false 
+        }));
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserCredit]);
+  }, [fetchUserCredit, dispatch]);
 
   // Function to add credits
   const handleAddCredit = async () => {
@@ -115,14 +142,18 @@ export default function CreditPage() {
           text: `Successfully added 43,200 minutes! Your new balance is ${data.data.new_credit.toLocaleString()} minutes.`
         });
         
-        // Update local credit state
-        setUserCredit(data.data.new_credit);
+        // Update Redux store with new credit value and mark as successful
+        dispatch(ChangeCredit({ 
+          creditDetails: data.data.new_credit, 
+          success: true 
+        }));
         
         // Redirect to home page after 2 seconds
         setTimeout(() => {
           window.location.href = '/';
         }, 2000);
       } else {
+        // If add credit fails, don't update the store
         setAddCreditMessage({
           type: 'error',
           text: data.message || 'Failed to add credits. Please try again.'
@@ -130,6 +161,7 @@ export default function CreditPage() {
       }
     } catch (error) {
       console.error('Error adding credits:', error);
+      // If add credit fails, don't update the store
       setAddCreditMessage({
         type: 'error',
         text: 'Network error. Please check your connection and try again.'
@@ -137,12 +169,6 @@ export default function CreditPage() {
     } finally {
       setIsAddingCredit(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setShowUserMenu(false);
-    window.location.href = '/login';
   };
 
   const handleBackToHome = () => {
@@ -186,74 +212,6 @@ export default function CreditPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left side - Back button */}
-            <button
-              onClick={handleBackToHome}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
-            </button>
-            
-            {/* Centered Title */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Credits
-              </h1>
-            </div>
-            
-            {/* Right side - User menu */}
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-3 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-1.5 rounded-full">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-gray-700 font-medium truncate max-w-32">
-                    {user.email}
-                  </span>
-                </button>
-                
-                {/* User Dropdown Menu */}
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm text-gray-500">Signed in as</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Click outside to close menu */}
-      {showUserMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowUserMenu(false)}
-        ></div>
-      )}
-
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-16">
         {/* Hero Section */}
@@ -282,13 +240,13 @@ export default function CreditPage() {
             ) : (
               <div className="mb-6">
                 <div className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2">
-                  {formatCredit(userCredit)}
+                  {formatCredit(creditDetails)}
                 </div>
                 <div className="text-lg text-gray-600">
                   minutes remaining
                 </div>
                 <div className="text-sm text-gray-500 mt-2">
-                  That&apos;s approximately <strong>{convertMinutesToDays(userCredit)}</strong> of continuous monitoring
+                  That&apos;s approximately <strong>{convertMinutesToDays(creditDetails)}</strong> of continuous monitoring
                 </div>
               </div>
             )}
@@ -388,39 +346,9 @@ export default function CreditPage() {
                 )}
               </div>
             )}
-
-            {/* <div className="text-sm text-gray-500">
-              <p>Need more credits? Contact our support team for custom packages.</p>
-            </div> */}
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20">
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Image 
-                  src="/logo.png" 
-                  alt="NapStopper Logo" 
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h3 className="text-2xl font-bold">NapStopper</h3>
-            </div>
-            <p className="text-gray-400 mb-6">
-              Keep your free-tier applications running 24/7 with our reliable monitoring service.
-            </p>
-            <p className="text-gray-500 text-sm">
-              © 2025 NapStopper. Made with ❤️ for developers.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

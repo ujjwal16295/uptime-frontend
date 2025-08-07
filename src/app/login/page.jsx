@@ -1,8 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Zap, Mail, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Zap, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -77,10 +76,6 @@ export default function LoginPage() {
     return () => subscription.unsubscribe();
   }, [createUserIfNotExists]);
 
-  const handleBack = () => {
-    window.location.href = '/';
-  };
-
   const handleEmailLogin = async () => {    
     if (!email) {
       setMessage({
@@ -137,38 +132,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Home</span>
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Image 
-                  src="/logo.png" 
-                  alt="NapStopper Logo" 
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                NapStopper
-              </h1>
-            </div>
-            
-            <div className="w-24"></div> {/* Spacer for centering */}
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-12">
         <div className="w-full max-w-md">
@@ -300,29 +263,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-1.5 rounded-lg">
-                <Image 
-                  src="/logo.png" 
-                  alt="NapStopper Logo" 
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h3 className="text-lg font-bold">NapStopper</h3>
-            </div>
-            <p className="text-gray-400 text-sm">
-              Keep your free-tier applications running 24/7 without any hassle.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client"
-import React, { useState, useEffect, useCallback } from 'react';
-import { Shield, Clock, Code, Globe, CheckCircle, Copy, Server, User, LogOut, Gift, AlertCircle, ChevronDown, Info, Mail } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // Adjust path as needed
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
+import { Clock, Globe, CheckCircle, Copy, Gift, AlertCircle, Server } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { supabase } from '../../lib/supabase'; // Adjust path as needed
 
 export default function KeepAlivePingService() {
   const [selectedLanguage, setSelectedLanguage] = useState('nodejs');
@@ -12,37 +12,12 @@ export default function KeepAlivePingService() {
   const [submitMessage, setSubmitMessage] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showNavMenu, setShowNavMenu] = useState(false);
-  const [userCredit, setUserCredit] = useState(null);
-  const [loadingCredit, setLoadingCredit] = useState(false);
+
+  // Redux state - only get credit from store
+  const { creditDetails } = useSelector((state) => state.credit);
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-  // Function to fetch user credit from backend
-  const fetchUserCredit = useCallback(async (email) => {
-    setLoadingCredit(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUserCredit(data.data.credit);
-      } else if (response.status === 404) {
-        // User not found, set default credit
-        setUserCredit(21600);
-      } else {
-        console.error('Failed to fetch user credit');
-        setUserCredit(21600); // Fallback to default
-      }
-    } catch (error) {
-      console.error('Error fetching user credit:', error);
-      setUserCredit(21600); // Fallback to default
-    } finally {
-      setLoadingCredit(false);
-    }
-  }, [API_BASE_URL]);
 
   // Check authentication status
   useEffect(() => {
@@ -50,11 +25,6 @@ export default function KeepAlivePingService() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       setLoading(false);
-      
-      // Fetch user credit if user is logged in
-      if (user?.email) {
-        fetchUserCredit(user.email);
-      }
     };
 
     getUser();
@@ -63,17 +33,10 @@ export default function KeepAlivePingService() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Fetch credit when user logs in
-      if (session?.user?.email) {
-        fetchUserCredit(session.user.email);
-      } else {
-        setUserCredit(null);
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserCredit]);
+  }, []);
 
   const codeExamples = {
     nodejs: `app.get('/api/health', (req, res) => {
@@ -165,9 +128,6 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
           text: data.message || 'Your application has been added successfully! We&apos;ll start pinging it every 10 minutes.'
         });
         setBackendUrl(''); // Clear the input
-        
-        // Refresh user credit after successful submission
-        await fetchUserCredit(user.email);
       } else {
         setSubmitMessage({
           type: 'error',
@@ -193,193 +153,11 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
     window.location.href = '/credit';
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setShowUserMenu(false);
-    setUserCredit(null);
-  };
-
-  const handleDashboard = () => {
-    window.location.href = '/dashboard';
-  };
-
-  const handleAboutUs = () => {
-    window.location.href = '/aboutus';
-  };
-
-  const handleContactUs = () => {
-    window.location.href = '/contactus';
-  };
-
-  // Format credit display
-  const formatCredit = (credit) => {
-    if (credit === null || credit === undefined) return 'Loading...';
-    return credit.toLocaleString();
-  };
-
-  // Check if user has zero credits
-  const hasZeroCredits = userCredit === 0;
+  // Check if user has zero credits - use value from store
+  const hasZeroCredits = creditDetails === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left spacer for centering */}
-            <div className="flex items-center space-x-4">
-              {user && (
-                <button
-                  onClick={handleCredits}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    hasZeroCredits 
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
-                >
-                  {loadingCredit ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Loading...</span>
-                    </div>
-                  ) : hasZeroCredits ? (
-                    `Get Credits: ${formatCredit(userCredit)}`
-                  ) : (
-                    `Credits: ${formatCredit(userCredit)}`
-                  )}
-                </button>
-              )}
-            </div>
-            
-            {/* Centered Title */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Image 
-                  src="/logo.png" 
-                  alt="NapStopper Logo" 
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              NapStopper
-              </h1>
-            </div>
-            
-            {/* Right side - Login button or User menu */}
-            <div className="flex items-center space-x-4">
-              {loading ? (
-                <div className="w-8 h-8 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
-              ) : user ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-1.5 rounded-full">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-gray-700 font-medium truncate max-w-32">
-                      {user.email}
-                    </span>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  </button>
-                  
-                  {/* User Dropdown Menu */}
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm text-gray-500">Signed in as</p>
-                        <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                      </div>
-                      <button
-                        onClick={handleAboutUs}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <Info className="w-4 h-4" />
-                        <span>About Us</span>
-                      </button>
-                      <button
-                        onClick={handleContactUs}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <Mail className="w-4 h-4" />
-                        <span>Contact Us</span>
-                      </button>
-                      <hr className="my-2 border-gray-100" />
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    <Gift className="w-4 h-4" />
-                    <span>Get 21,600 min free!</span>
-                  </div>
-                  
-                  {/* Navigation dropdown for non-authenticated users */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowNavMenu(!showNavMenu)}
-                      className="flex items-center space-x-2 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="text-gray-700 font-medium">Menu</span>
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    </button>
-                    
-                    {/* Navigation Dropdown Menu */}
-                    {showNavMenu && (
-                      <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        <button
-                          onClick={handleAboutUs}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                        >
-                          <Info className="w-4 h-4" />
-                          <span>About Us</span>
-                        </button>
-                        <button
-                          onClick={handleContactUs}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                        >
-                          <Mail className="w-4 h-4" />
-                          <span>Contact Us</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <button
-                    onClick={handleLogin}
-                    className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:from-orange-700 hover:to-amber-700 transition-all duration-200"
-                  >
-                    Login
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Click outside to close menus */}
-      {(showUserMenu || showNavMenu) && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => {
-            setShowUserMenu(false);
-            setShowNavMenu(false);
-          }}
-        ></div>
-      )}
-
       {/* Zero Credits Alert */}
       {user && hasZeroCredits && (
         <div className="bg-red-50 border-b border-red-200">
@@ -590,7 +368,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                           <span className="text-red-600 font-medium">
                             You need credits to add applications. Click &ldquo;Get Credits&rdquo; to purchase more.
                           </span>
-                        ) : (
+                        ) :(
                           "Make sure to include the full URL to your health endpoint"
                         )}
                       </p>
@@ -636,32 +414,6 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-20">
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Image 
-                  src="/logo.png" 
-                  alt="NapStopper Logo" 
-                  width={24}
-                  height={24}
-                  className="object-contain"
-                />
-              </div>
-              <h3 className="text-2xl font-bold">NapStopper</h3>
-            </div>
-            <p className="text-gray-400 mb-6">
-              Keep your free-tier applications running 24/7. Login to get 21,600 minutes of free credits!
-            </p>
-            <p className="text-gray-500 text-sm">
-              © 2025 NapStopper. Made with ❤️ for developers.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
