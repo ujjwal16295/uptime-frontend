@@ -1,13 +1,16 @@
 "use client"
 import { Provider } from "react-redux"
-import store from "./store"
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from "./store"; // Import both store and persistor
 
- const StoreProvider = ({children})=>{
-return <Provider store={store}>
-{children}
-</Provider>
+const StoreProvider = ({children}) => {
+    return (
+        <Provider store={store}>
+            <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
+                {children}
+            </PersistGate>
+        </Provider>
+    )
 }
-
-// this is new setup for next js redux
 
 export default StoreProvider
