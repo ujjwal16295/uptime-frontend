@@ -375,10 +375,6 @@ export default function CreditPage() {
                   </div>
                 ) : loadingCredit ? (
                   'Loading...'
-                ) : !canAddCredits() ? (
-                  getRemainingCapacity() > 0 
-                    ? `Only ${getRemainingCapacity().toLocaleString()} minutes can be added`
-                    : 'Credit limit reached'
                 ) : (
                   'Add 43,200 Minutes Free'
                 )}
