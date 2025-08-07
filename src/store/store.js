@@ -1,12 +1,31 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage/session'; // Use sessionStorage
 import CreditSlice from "./CreditSlice";
+
+// Create a custom storage that checks for browser environment
+const createNoopStorage = () => {
+    return {
+        getItem(_key) {
+            return Promise.resolve(null);
+        },
+        setItem(_key, value) {
+            return Promise.resolve(value);
+        },
+        removeItem(_key) {
+            return Promise.resolve();
+        },
+    };
+};
+
+// Use sessionStorage only on client side
+const storage = typeof window !== "undefined" 
+    ? require('redux-persist/lib/storage/session').default 
+    : createNoopStorage();
 
 // Persist configuration
 const persistConfig = {
     key: 'root',
-    storage, // This uses sessionStorage
+    storage,
     whitelist: ['credit'] // Only persist the credit slice
 };
 
