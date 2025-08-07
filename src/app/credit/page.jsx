@@ -6,6 +6,10 @@ import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../../store/CreditSlice'; // Adjust path as needed
 import { clearCreditSession } from '../../utils/sessionStorage'; // Adjust path as needed
 
+// Constants
+const CREDIT_TO_ADD = 43200;
+const MAX_CREDIT_LIMIT = 70000;
+
 export default function CreditPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +23,17 @@ export default function CreditPage() {
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  // Helper functions for credit limit checking
+  const canAddCredits = () => {
+    if (!creditDetails || loadingCredit) return false;
+    return (creditDetails + CREDIT_TO_ADD) <= MAX_CREDIT_LIMIT;
+  };
+
+  const getRemainingCapacity = () => {
+    if (!creditDetails) return MAX_CREDIT_LIMIT;
+    return Math.max(0, MAX_CREDIT_LIMIT - creditDetails);
+  };
 
   // Function to fetch user credit from backend
   const fetchUserCredit = useCallback(async (email) => {
@@ -112,12 +127,30 @@ export default function CreditPage() {
     return () => subscription.unsubscribe();
   }, [fetchUserCredit, dispatch]);
 
-  // Function to add credits
+  // Enhanced function to add credits with 70k limit handling
   const handleAddCredit = async () => {
     if (!user?.email) {
       setAddCreditMessage({
         type: 'error',
         text: 'Please login to add credits'
+      });
+      return;
+    }
+
+    // Check if adding credits would exceed limit (client-side prevention)
+    if (!canAddCredits()) {
+      const remainingCapacity = getRemainingCapacity();
+      let errorMessage;
+      
+      if (remainingCapacity > 0) {
+        errorMessage = `Cannot add 43,200 minutes. You can only add ${remainingCapacity.toLocaleString()} more minutes to stay within the ${MAX_CREDIT_LIMIT.toLocaleString()} minute limit.`;
+      } else {
+        errorMessage = `You've reached the maximum credit limit of ${MAX_CREDIT_LIMIT.toLocaleString()} minutes. No additional credits can be added.`;
+      }
+      
+      setAddCreditMessage({
+        type: 'error',
+        text: errorMessage
       });
       return;
     }
@@ -155,15 +188,32 @@ export default function CreditPage() {
           window.location.href = '/';
         }, 2000);
       } else {
-        // If add credit fails, don't update the store
+        // Handle different types of errors
+        let errorMessage = 'Failed to add credits. Please try again.';
+        
+        // Check for specific error types
+        if (response.status === 400 && data.error === 'Credit limit exceeded') {
+          // Handle 70k limit exceeded error
+          const remainingCapacity = data.data?.remaining_capacity || 0;
+          
+          if (remainingCapacity > 0) {
+            errorMessage = `Credit limit reached! You can only add ${remainingCapacity.toLocaleString()} more minutes. Your current balance is ${data.data.current_credit.toLocaleString()} minutes (max: ${data.data.maximum_allowed.toLocaleString()}).`;
+          } else {
+            errorMessage = `You've reached the maximum credit limit of ${data.data?.maximum_allowed?.toLocaleString() || '70,000'} minutes. No additional credits can be added.`;
+          }
+        } else if (response.status === 404) {
+          errorMessage = 'User not found. Please add a URL first to create an account.';
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+        
         setAddCreditMessage({
           type: 'error',
-          text: data.message || 'Failed to add credits. Please try again.'
+          text: errorMessage
         });
       }
     } catch (error) {
       console.error('Error adding credits:', error);
-      // If add credit fails, don't update the store
       setAddCreditMessage({
         type: 'error',
         text: 'Network error. Please check your connection and try again.'
@@ -308,20 +358,80 @@ export default function CreditPage() {
                 </div>
               </div>
 
+              {/* Enhanced Button with Credit Limit Awareness */}
               <button
                 onClick={handleAddCredit}
-                disabled={isAddingCredit}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={isAddingCredit || loadingCredit || !canAddCredits()}
+                className={`w-full px-8 py-4 rounded-lg font-semibold transition-all duration-200 shadow-lg transform ${
+                  canAddCredits() && !isAddingCredit && !loadingCredit
+                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 hover:shadow-xl hover:-translate-y-0.5'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
                 {isAddingCredit ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Adding Credits...</span>
                   </div>
+                ) : loadingCredit ? (
+                  'Loading...'
+                ) : !canAddCredits() ? (
+                  getRemainingCapacity() > 0 
+                    ? `Only ${getRemainingCapacity().toLocaleString()} minutes can be added`
+                    : 'Credit limit reached'
                 ) : (
                   'Add 43,200 Minutes Free'
                 )}
               </button>
+
+              {/* Credit Information Section */}
+              {!loadingCredit && creditDetails !== null && (
+                <div className="mt-6 text-sm text-gray-600 bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span>Current balance:</span>
+                      <span className="font-medium">{formatCredit(creditDetails)} minutes</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Maximum allowed:</span>
+                      <span className="font-medium">{MAX_CREDIT_LIMIT.toLocaleString()} minutes</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Remaining capacity:</span>
+                      <span className={`font-medium ${getRemainingCapacity() === 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {getRemainingCapacity().toLocaleString()} minutes
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Progress bar showing credit usage */}
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                      <span>Credit Usage</span>
+                      <span>{((creditDetails / MAX_CREDIT_LIMIT) * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          creditDetails / MAX_CREDIT_LIMIT < 0.8 
+                            ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                            : creditDetails / MAX_CREDIT_LIMIT < 0.95 
+                              ? 'bg-gradient-to-r from-yellow-500 to-yellow-600'
+                              : 'bg-gradient-to-r from-red-500 to-red-600'
+                        }`}
+                        style={{ width: `${Math.min((creditDetails / MAX_CREDIT_LIMIT) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    
+                    {/* Credit Status Message */}
+                    {creditDetails / MAX_CREDIT_LIMIT >= 0.95 && (
+                      <div className="mt-2 text-xs text-red-600 font-medium">
+                        ⚠️ You're approaching the credit limit
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Success/Error Message */}
