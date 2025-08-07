@@ -4,6 +4,7 @@ import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw } from 'lucide-r
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
+import { clearCreditSession } from '../utils/sessionStorage'; // Adjust path as needed
 import Image from 'next/image';
 
 export default function Header() {
@@ -93,7 +94,8 @@ export default function Header() {
       if (session?.user?.email) {
         fetchUserCredit(session.user.email);
       } else {
-        // Reset credit state when user logs out
+        // Clear session storage and reset credit state when user logs out
+        clearCreditSession();
         dispatch(ChangeCredit({ 
           creditDetails: 21600, 
           success: false 
@@ -115,7 +117,8 @@ export default function Header() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setShowUserMenu(false);
-    // Reset credit state
+    // Clear session storage and reset credit state
+    clearCreditSession();
     dispatch(ChangeCredit({ 
       creditDetails: 21600, 
       success: false 

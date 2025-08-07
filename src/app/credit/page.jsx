@@ -4,6 +4,7 @@ import { Gift, CheckCircle, Clock, Globe, Server } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../../store/CreditSlice'; // Adjust path as needed
+import { clearCreditSession } from '../../utils/sessionStorage'; // Adjust path as needed
 
 export default function CreditPage() {
   const [user, setUser] = useState(null);
@@ -99,7 +100,8 @@ export default function CreditPage() {
       if (session?.user?.email) {
         fetchUserCredit(session.user.email);
       } else {
-        // Reset credit state
+        // Clear session storage and reset credit state
+        clearCreditSession();
         dispatch(ChangeCredit({ 
           creditDetails: 21600, 
           success: false 
