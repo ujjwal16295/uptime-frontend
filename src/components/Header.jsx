@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw } from 'lucide-react';
+import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
@@ -133,6 +133,10 @@ export default function Header() {
     window.location.href = '/contactus';
   };
 
+  const handleDashboard = () => {
+    window.location.href = '/dashboard';
+  };
+
   // Navigate to home page
   const handleHomeClick = () => {
     window.location.href = '/';
@@ -259,6 +263,13 @@ export default function Header() {
                         <span>Contact Us</span>
                       </button>
                       <hr className="my-2 border-gray-100" />
+                      <button
+                        onClick={handleDashboard}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </button>
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
