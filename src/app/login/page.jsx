@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { Zap, Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { Zap, Mail, CheckCircle, AlertCircle, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function LoginPage() {
@@ -8,6 +8,49 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [emailSent, setEmailSent] = useState(false);
+
+  // Function to check if user limit is reached
+  const checkUserLimit = useCallback(async (userEmail) => {
+    try {
+      // First check if this user already exists
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', userEmail)
+        .single();
+
+      // If user exists, they can login regardless of limit
+      if (existingUser) {
+        return { canProceed: true, isExistingUser: true };
+      }
+
+      // If error is not "not found", something went wrong
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking user existence:', fetchError);
+        return { canProceed: false, error: 'Database error occurred' };
+      }
+
+      // User doesn't exist, check total user count
+      const { count, error: countError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Error counting users:', countError);
+        return { canProceed: false, error: 'Database error occurred' };
+      }
+
+      // Check if limit is reached
+      if (count >= 100) {
+        return { canProceed: false, isLimitReached: true };
+      }
+
+      return { canProceed: true, isExistingUser: false };
+    } catch (error) {
+      console.error('Error in checkUserLimit:', error);
+      return { canProceed: false, error: 'An unexpected error occurred' };
+    }
+  }, []);
 
   // Function to create user record if it doesn't exist
   const createUserIfNotExists = useCallback(async (userEmail) => {
@@ -97,6 +140,27 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
+      // Check user limit before attempting login
+      const limitCheck = await checkUserLimit(email);
+      
+      if (!limitCheck.canProceed) {
+        setIsLoading(false);
+        
+        if (limitCheck.isLimitReached) {
+          setMessage({
+            type: 'error',
+            text: 'Registration is currently closed. Only 100 people are allowed to join at this time.'
+          });
+        } else {
+          setMessage({
+            type: 'error',
+            text: limitCheck.error || 'Unable to process request. Please try again.'
+          });
+        }
+        return;
+      }
+
+      // Proceed with login if limit check passes
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
         options: {
@@ -173,7 +237,7 @@ export default function LoginPage() {
                   {isLoading ? (
                     <div className="flex items-center justify-center space-x-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Sending Magic Link...</span>
+                      <span>Checking availability...</span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center space-x-2">
@@ -194,6 +258,8 @@ export default function LoginPage() {
                   <div className="flex items-center space-x-2">
                     {message.type === 'success' ? (
                       <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : message.text.includes('100 people') ? (
+                      <Users className="w-5 h-5 text-red-600" />
                     ) : (
                       <AlertCircle className="w-5 h-5 text-red-600" />
                     )}

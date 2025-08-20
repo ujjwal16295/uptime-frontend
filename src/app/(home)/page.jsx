@@ -125,7 +125,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
       if (response.ok) {
         setSubmitMessage({
           type: 'success',
-          text: data.message || 'Your application has been added successfully! We&apos;ll start pinging it every 10 minutes.'
+          text: data.message || 'Your application has been added successfully! We\'ll start pinging it every 10 minutes.'
         });
         setBackendUrl(''); // Clear the input
       } else {
@@ -204,7 +204,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                 <h3 className="text-xl font-bold text-green-800">Get Started Free!</h3>
               </div>
               <p className="text-green-700 mb-4">
-                Login to get <strong>21,600 minutes</strong> of free credits - that&apos;s <strong>15 days</strong> of continuous pinging!
+                Login to get <strong>21,600 minutes</strong> of free credits - that's <strong>15 days</strong> of continuous pinging!
               </p>
               <button
                 onClick={handleLogin}
@@ -226,7 +226,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             </div>
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4" />
-              <span>Works with all platforms</span>
+              <span>Up to 3 URLs per account</span>
             </div>
           </div>
         </div>
@@ -259,7 +259,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Platform Agnostic</h3>
             <p className="text-gray-600">
-              Works with Render, Railway, Heroku, and any other platform that puts apps to sleep.
+              Works with Render, Railway, Heroku, and any other platform that puts apps to sleep. Up to 3 URLs per account.
             </p>
           </div>
         </div>
@@ -342,7 +342,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             
             <div className="ml-12">
               <p className="text-gray-600 mb-6">
-                Enter your backend URL below and we&apos;ll start pinging it every 10 minutes:
+                Enter your backend URL below and we'll start pinging it every 10 minutes:
               </p>
               
               <div className="max-w-2xl">
@@ -366,10 +366,10 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                           </span>
                         ) : hasZeroCredits ? (
                           <span className="text-red-600 font-medium">
-                            You need credits to add applications. Click &ldquo;Get Credits&rdquo; to purchase more.
+                            You need credits to add applications. Click "Get Credits" to purchase more.
                           </span>
-                        ) :(
-                          "Make sure to include the full URL to your health endpoint"
+                        ) : (
+                          "Make sure to include the full URL to your health endpoint (Maximum 3 URLs per account)"
                         )}
                       </p>
                     </div>
