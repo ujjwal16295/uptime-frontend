@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Globe, CheckCircle, Copy, Gift, AlertCircle, Server } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
@@ -19,24 +19,139 @@ export default function KeepAlivePingService() {
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  // Check authentication status
+  // Function to check if user limit is reached
+  const checkUserLimit = useCallback(async (userEmail) => {
+    try {
+      // First check if this user already exists
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', userEmail)
+        .single();
+
+      // If user exists, they can proceed regardless of limit
+      if (existingUser) {
+        return { canProceed: true, isExistingUser: true };
+      }
+
+      // If error is not "not found", something went wrong
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking user existence:', fetchError);
+        return { canProceed: false, error: 'Database error occurred' };
+      }
+
+      // User doesn't exist, check total user count
+      const { count, error: countError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('Error counting users:', countError);
+        return { canProceed: false, error: 'Database error occurred' };
+      }
+
+      // Check if limit is reached
+      if (count >= 100) {
+        return { canProceed: false, isLimitReached: true };
+      }
+
+      return { canProceed: true, isExistingUser: false };
+    } catch (error) {
+      console.error('Error in checkUserLimit:', error);
+      return { canProceed: false, error: 'An unexpected error occurred' };
+    }
+  }, []);
+
+  // Function to create user record if it doesn't exist
+  const createUserIfNotExists = useCallback(async (userEmail) => {
+    try {
+      // Check user limit first
+      const limitCheck = await checkUserLimit(userEmail);
+      
+      if (!limitCheck.canProceed) {
+        console.error('User limit reached or error occurred:', limitCheck);
+        // If it's a new user and limit is reached, redirect to login with error
+        if (limitCheck.isLimitReached) {
+          alert('Registration is currently closed. Only 100 people are allowed to join at this time.');
+          // Sign out the user
+          await supabase.auth.signOut();
+          window.location.href = '/login';
+          return;
+        }
+        return;
+      }
+
+      // If user already exists, no need to create
+      if (limitCheck.isExistingUser) {
+        console.log('User already exists:', userEmail);
+        return;
+      }
+
+      // Check if user already exists (double check)
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', userEmail)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 is "not found" error, which is expected for new users
+        console.error('Error checking user existence:', fetchError);
+        return;
+      }
+
+      // If user doesn't exist, create them
+      if (!existingUser) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([
+            {
+              email: userEmail,
+              links: [], // Empty array (will use default '{}' from schema)
+              ping: 0,   // Will use default from schema
+              credit: 21600 // Will use default from schema
+            }
+          ]);
+
+        if (insertError) {
+          console.error('Error creating user:', insertError);
+        } else {
+          console.log('User created successfully:', userEmail);
+        }
+      }
+    } catch (error) {
+      console.error('Error in createUserIfNotExists:', error);
+    }
+  }, [checkUserLimit]);
+
+  // Check authentication status and create user if needed
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      if (user) {
+        // Create user record if needed
+        await createUserIfNotExists(user.email);
+        setUser(user);
+      }
       setLoading(false);
     };
 
     getUser();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Create user record if needed
+        await createUserIfNotExists(session.user.email);
+        setUser(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [createUserIfNotExists]);
 
   const codeExamples = {
     nodejs: `app.get('/api/health', (req, res) => {
@@ -152,6 +267,18 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
   const handleCredits = () => {
     window.location.href = '/credit';
   };
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Check if user has zero credits - use value from store
   const hasZeroCredits = creditDetails === 0;
