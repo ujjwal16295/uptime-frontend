@@ -124,15 +124,14 @@ export default function KeepAlivePingService() {
         return;
       }
 
-      // Create/update user in database using upsert (same pattern as ForgeHomepage)
+      // Create/update user in database using upsert (matching your actual table structure)
       const { data: userData, error: userError } = await supabase
         .from('users')
         .upsert(
           { 
             email: email,
-            links: [],
-            ping: 0,
             credit: 21600
+            // Note: created_at will be auto-set by default, id is auto-increment
           },
           { 
             onConflict: 'email',
