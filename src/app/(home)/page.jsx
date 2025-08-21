@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, Globe, CheckCircle, Copy, Gift, AlertCircle, Server } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
@@ -19,139 +19,147 @@ export default function KeepAlivePingService() {
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  // Function to check if user limit is reached
-  const checkUserLimit = useCallback(async (userEmail) => {
+  // Auth handling useEffect - same pattern as ForgeHomepage
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      try {
+        console.log('🔍 Checking for auth session on uptime home page...');
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Error getting session:', error);
+          return;
+        }
+
+        if (session && session.user) {
+          console.log('✅ Found session on uptime home page:', session.user.email);
+          setUser(session.user);
+          
+          // Check if this is a new login that hasn't been processed
+          const hasProcessedAuth = localStorage.getItem(`uptime_auth_processed_${session.user.id}`);
+          
+          if (!hasProcessedAuth) {
+            console.log('🔄 Processing new auth session for uptime...');
+            await handleUserSession(session);
+            localStorage.setItem(`uptime_auth_processed_${session.user.id}`, 'true');
+          } else {
+            console.log('✅ Auth already processed for this uptime user');
+          }
+        } else {
+          console.log('❌ No session found on uptime homepage');
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('❌ Auth callback error:', error);
+        setLoading(false);
+      }
+    };
+
+    // Run immediately
+    handleAuthCallback();
+
+    // Also listen for auth state changes (for real-time updates)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed on uptime homepage:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session) {
+        console.log('✅ User signed in on uptime page:', session.user.email);
+        setUser(session.user);
+        await handleUserSession(session);
+        localStorage.setItem(`uptime_auth_processed_${session.user.id}`, 'true');
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('🚪 User signed out from uptime page');
+        setUser(null);
+        // Clean up localStorage on signout
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('uptime_auth_processed_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      
+      setLoading(false);
+    });
+
+    // Cleanup subscription
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  const handleUserSession = async (session) => {
     try {
-      // First check if this user already exists
-      const { data: existingUser, error: fetchError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('email', userEmail)
-        .single();
-
-      // If user exists, they can proceed regardless of limit
-      if (existingUser) {
-        return { canProceed: true, isExistingUser: true };
-      }
-
-      // If error is not "not found", something went wrong
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error checking user existence:', fetchError);
-        return { canProceed: false, error: 'Database error occurred' };
-      }
-
-      // User doesn't exist, check total user count
-      const { count, error: countError } = await supabase
+      const user = session.user;
+      const email = user.email;
+      
+      console.log('🔄 Processing uptime user session for:', email);
+      
+      // Check if user limit is reached before creating user
+      const { count: userCount, error: countError } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true });
 
       if (countError) {
-        console.error('Error counting users:', countError);
-        return { canProceed: false, error: 'Database error occurred' };
-      }
-
-      // Check if limit is reached
-      if (count >= 100) {
-        return { canProceed: false, isLimitReached: true };
-      }
-
-      return { canProceed: true, isExistingUser: false };
-    } catch (error) {
-      console.error('Error in checkUserLimit:', error);
-      return { canProceed: false, error: 'An unexpected error occurred' };
-    }
-  }, []);
-
-  // Function to create user record if it doesn't exist
-  const createUserIfNotExists = useCallback(async (userEmail) => {
-    try {
-      // Check user limit first
-      const limitCheck = await checkUserLimit(userEmail);
-      
-      if (!limitCheck.canProceed) {
-        console.error('User limit reached or error occurred:', limitCheck);
-        // If it's a new user and limit is reached, redirect to login with error
-        if (limitCheck.isLimitReached) {
-          alert('Registration is currently closed. Only 100 people are allowed to join at this time.');
-          // Sign out the user
-          await supabase.auth.signOut();
-          window.location.href = '/login';
-          return;
-        }
+        console.error('❌ Error counting users:', countError);
         return;
       }
 
-      // If user already exists, no need to create
-      if (limitCheck.isExistingUser) {
-        console.log('User already exists:', userEmail);
-        return;
-      }
-
-      // Check if user already exists (double check)
-      const { data: existingUser, error: fetchError } = await supabase
+      // Check if this user already exists
+      const { data: existingUser, error: existingError } = await supabase
         .from('users')
         .select('email')
-        .eq('email', userEmail)
+        .eq('email', email)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 is "not found" error, which is expected for new users
-        console.error('Error checking user existence:', fetchError);
+      // If user doesn't exist and we're at the limit, reject
+      if (!existingUser && userCount >= 100) {
+        console.log('🚫 User limit reached, signing out...');
+        alert('Registration is currently closed. Only 100 people are allowed to join at this time.');
+        await supabase.auth.signOut();
+        window.location.href = '/login';
         return;
       }
 
-      // If user doesn't exist, create them
-      if (!existingUser) {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([
-            {
-              email: userEmail,
-              links: [], // Empty array (will use default '{}' from schema)
-              ping: 0,   // Will use default from schema
-              credit: 21600 // Will use default from schema
-            }
-          ]);
+      // Create/update user in database using upsert (same pattern as ForgeHomepage)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .upsert(
+          { 
+            email: email,
+            links: [],
+            ping: 0,
+            credit: 21600
+          },
+          { 
+            onConflict: 'email',
+            ignoreDuplicates: false 
+          }
+        )
+        .select();
 
-        if (insertError) {
-          console.error('Error creating user:', insertError);
-        } else {
-          console.log('User created successfully:', userEmail);
-        }
+      if (userError) {
+        console.error('❌ Detailed user error:', userError);
+        console.error('❌ Error code:', userError.code);
+        console.error('❌ Error message:', userError.message);
+        console.error('❌ Error details:', userError.details);
+      } else {
+        console.log('✅ Uptime user created/updated successfully:', userData);
       }
+
+      // Show success message if no errors
+      if (!userError) {
+        console.log('✅ Uptime user successfully processed and stored in database');
+        // You could show a toast notification here if you want
+      }
+
     } catch (error) {
-      console.error('Error in createUserIfNotExists:', error);
+      console.error('❌ Unexpected error in handleUserSession:', error);
     }
-  }, [checkUserLimit]);
-
-  // Check authentication status and create user if needed
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Create user record if needed
-        await createUserIfNotExists(user.email);
-        setUser(user);
-      }
-      setLoading(false);
-    };
-
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // Create user record if needed
-        await createUserIfNotExists(session.user.email);
-        setUser(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [createUserIfNotExists]);
+  };
 
   const codeExamples = {
     nodejs: `app.get('/api/health', (req, res) => {
