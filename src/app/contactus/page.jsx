@@ -63,7 +63,7 @@ export default function ContactUsPage() {
                   href="mailto:napstopper@gmail.com"
                   className="text-xl font-semibold text-orange-600 hover:text-orange-700 transition-colors"
                 >
-                  napstopper@gmail.com
+                  newujjwalpatel@gmail.com
                 </a>
                 <button
                   onClick={copyEmailToClipboard}
