@@ -13,7 +13,8 @@ export default function ContactUsPage() {
 
   // Copy email to clipboard
   const copyEmailToClipboard = () => {
-    navigator.clipboard.writeText('napstopper@gmail.com');
+    // navigator.clipboard.writeText('napstopper@gmail.com');
+    navigator.clipboard.writeText('newujjwalpatel@gmail.com');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
