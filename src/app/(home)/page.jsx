@@ -19,7 +19,7 @@ export default function KeepAlivePingService() {
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  // Auth handling useEffect - same pattern as ForgeHomepage
+  // Auth handling useEffect - updated to use backend API
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
@@ -98,65 +98,44 @@ export default function KeepAlivePingService() {
       
       console.log('🔄 Processing uptime user session for:', email);
       
-      // Check if user limit is reached before creating user
-      const { count: userCount, error: countError } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
+      // Call backend API to handle user authentication/creation
+      const response = await fetch(`${API_BASE_URL}/api/users/auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email
+        })
+      });
 
-      if (countError) {
-        console.error('❌ Error counting users:', countError);
-        return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Backend user auth error:', data);
+        
+        if (response.status === 403 && data.error === 'Registration closed') {
+          console.log('🚫 User limit reached, signing out...');
+          alert(data.message || 'Registration is currently closed. Only 100 people are allowed to join at this time.');
+          await supabase.auth.signOut();
+          window.location.href = '/login';
+          return;
+        }
+        
+        throw new Error(data.message || 'Failed to authenticate user');
       }
 
-      // Check if this user already exists
-      const { data: existingUser, error: existingError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('email', email)
-        .single();
-
-      // If user doesn't exist and we're at the limit, reject
-      if (!existingUser && userCount >= 100) {
-        console.log('🚫 User limit reached, signing out...');
-        alert('Registration is currently closed. Only 100 people are allowed to join at this time.');
-        await supabase.auth.signOut();
-        window.location.href = '/login';
-        return;
-      }
-
-      // Create/update user in database using upsert (matching your actual table structure)
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .upsert(
-          { 
-            email: email,
-            credit: 21600
-            // Note: created_at will be auto-set by default, id is auto-increment
-          },
-          { 
-            onConflict: 'email',
-            ignoreDuplicates: false 
-          }
-        )
-        .select();
-
-      if (userError) {
-        console.error('❌ Detailed user error:', userError);
-        console.error('❌ Error code:', userError.code);
-        console.error('❌ Error message:', userError.message);
-        console.error('❌ Error details:', userError.details);
+      console.log('✅ User successfully processed via backend:', data);
+      
+      if (data.data.is_new_user) {
+        console.log('🎉 New user created with backend API');
       } else {
-        console.log('✅ Uptime user created/updated successfully:', userData);
-      }
-
-      // Show success message if no errors
-      if (!userError) {
-        console.log('✅ Uptime user successfully processed and stored in database');
-        // You could show a toast notification here if you want
+        console.log('👋 Existing user authenticated via backend API');
       }
 
     } catch (error) {
-      console.error('❌ Unexpected error in handleUserSession:', error);
+      console.error('❌ Error in handleUserSession:', error);
+      // You might want to show a user-friendly error message here
     }
   };
 
