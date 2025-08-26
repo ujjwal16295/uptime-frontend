@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity } from 'lucide-react';
+import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
@@ -137,6 +137,18 @@ export default function Header() {
     window.location.href = '/dashboard';
   };
 
+  const handlePricing = () => {
+    window.location.href = '/pricing';
+  };
+
+  const handleTerms = () => {
+    window.location.href = '/terms';
+  };
+
+  const handlePrivacy = () => {
+    window.location.href = '/privacy';
+  };
+
   // Navigate to home page
   const handleHomeClick = () => {
     window.location.href = '/';
@@ -255,6 +267,29 @@ export default function Header() {
                         <Info className="w-4 h-4" />
                         <span>About Us</span>
                       </button>
+
+                      <button
+                        onClick={handlePricing}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Pricing</span>
+                      </button>
+                      <button
+                        onClick={handleTerms}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Terms of service</span>
+                      </button>
+                      <button
+                        onClick={handlePrivacy}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        <span>Privacy Policy</span>
+                      </button>
+
                       <button
                         onClick={handleContactUs}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
@@ -314,6 +349,28 @@ export default function Header() {
                           <Mail className="w-4 h-4" />
                           <span>Contact Us</span>
                         </button>
+                        <button
+                        onClick={handlePricing}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Pricing</span>
+                      </button>
+                      <button
+                        onClick={handleTerms}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Terms of service</span>
+                      </button>
+                      <button
+                        onClick={handlePrivacy}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        <span>Privacy Policy</span>
+                      </button>
+                      
                       </div>
                     )}
                   </div>
