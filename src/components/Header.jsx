@@ -150,7 +150,7 @@ export default function Header() {
   };
   
   const handleReporting = () => {
-    window.location.href = '/report';
+    window.location.href = '/reporting';
   };
   
   const handleTestEndPoint = () => {
@@ -303,7 +303,7 @@ export default function Header() {
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
                       >
                         <AlertTriangle className="w-4 h-4" />
-                        <span>Report Issue</span>
+                        <span>Report</span>
                       </button>
                       <button
                         onClick={handleTestEndPoint}
