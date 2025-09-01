@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield } from 'lucide-react';
+import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield, AlertTriangle, Code } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
@@ -148,6 +148,14 @@ export default function Header() {
   const handlePrivacy = () => {
     window.location.href = '/privacy';
   };
+  
+  const handleReporting = () => {
+    window.location.href = '/report';
+  };
+  
+  const handleTestEndPoint = () => {
+    window.location.href = '/testendpoint';
+  };
 
   // Navigate to home page
   const handleHomeClick = () => {
@@ -261,13 +269,20 @@ export default function Header() {
                         <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
                       </div>
                       <button
+                        onClick={handleDashboard}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </button>
+                      <hr className="my-2 border-gray-100" />
+                      <button
                         onClick={handleAboutUs}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
                       >
                         <Info className="w-4 h-4" />
                         <span>About Us</span>
                       </button>
-
                       <button
                         onClick={handlePricing}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
@@ -275,21 +290,6 @@ export default function Header() {
                         <CreditCard className="w-4 h-4" />
                         <span>Pricing</span>
                       </button>
-                      <button
-                        onClick={handleTerms}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <FileText className="w-4 h-4" />
-                        <span>Terms of service</span>
-                      </button>
-                      <button
-                        onClick={handlePrivacy}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <Shield className="w-4 h-4" />
-                        <span>Privacy Policy</span>
-                      </button>
-
                       <button
                         onClick={handleContactUs}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
@@ -299,12 +299,35 @@ export default function Header() {
                       </button>
                       <hr className="my-2 border-gray-100" />
                       <button
-                        onClick={handleDashboard}
+                        onClick={handleReporting}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
                       >
-                        <Activity className="w-4 h-4" />
-                        <span>Dashboard</span>
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>Report Issue</span>
                       </button>
+                      <button
+                        onClick={handleTestEndPoint}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Code className="w-4 h-4" />
+                        <span>Test Endpoint</span>
+                      </button>
+                      <hr className="my-2 border-gray-100" />
+                      <button
+                        onClick={handleTerms}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Terms of Service</span>
+                      </button>
+                      <button
+                        onClick={handlePrivacy}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        <span>Privacy Policy</span>
+                      </button>
+                      <hr className="my-2 border-gray-100" />
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
@@ -350,27 +373,26 @@ export default function Header() {
                           <span>Contact Us</span>
                         </button>
                         <button
-                        onClick={handlePricing}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pricing</span>
-                      </button>
-                      <button
-                        onClick={handleTerms}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <FileText className="w-4 h-4" />
-                        <span>Terms of service</span>
-                      </button>
-                      <button
-                        onClick={handlePrivacy}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <Shield className="w-4 h-4" />
-                        <span>Privacy Policy</span>
-                      </button>
-                      
+                          onClick={handlePricing}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>Pricing</span>
+                        </button>
+                        <button
+                          onClick={handleTerms}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>Terms of Service</span>
+                        </button>
+                        <button
+                          onClick={handlePrivacy}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Privacy Policy</span>
+                        </button>
                       </div>
                     )}
                   </div>
