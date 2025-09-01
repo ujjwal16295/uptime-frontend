@@ -34,7 +34,7 @@ export default function PricingPage() {
     ],
     paid: [
       { icon: Globe, text: "Unlimited URLs", included: true },
-      { icon: Zap, text: "Ping every 6 minutes", included: true },
+      { icon: Zap, text: "Ping every 10 minutes", included: true },
       { icon: Check, text: "Unlimited monitoring", included: true },
       { icon: BarChart3, text: "Response time charts", included: true },
       { icon: Timer, text: "Route testing tool", included: true, note: "Test any endpoint instantly" },
@@ -263,7 +263,7 @@ export default function PricingPage() {
                     <td className="py-4 px-6 text-center text-gray-600">Every 10 min</td>
                     <td className="py-4 px-6 text-center">
                       <span className={`font-semibold ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`}>
-                        Every 6 min
+                        Every 10 min
                       </span>
                     </td>
                   </tr>
