@@ -6,6 +6,8 @@ import { TrendingUp, Clock, Globe, Lock, AlertCircle, BarChart3, Activity } from
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 
 export default function ResponseTimeAnalytics() {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dataLoading, setDataLoading] = useState(false);
@@ -59,7 +61,7 @@ export default function ResponseTimeAnalytics() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/user/${email}/response-times?limit=20`);
+      const response = await fetch(`${API_BASE_URL}/api/user/${email}/response-times?limit=5`);
       const result = await response.json();
 
       if (!response.ok) {
