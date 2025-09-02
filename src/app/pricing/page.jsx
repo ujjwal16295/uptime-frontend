@@ -29,15 +29,13 @@ export default function PricingPage() {
       { icon: RefreshCw, text: "Manual credit requests", included: true, note: "Add free credits through site" },
       { icon: X, text: "Unlimited monitoring", included: false },
       { icon: X, text: "Response time charts", included: false },
-      { icon: X, text: "Route testing tool", included: false },
       { icon: X, text: "6-minute pings", included: false }
     ],
     paid: [
       { icon: Globe, text: "Unlimited URLs", included: true },
-      { icon: Zap, text: "Ping every 10 minutes", included: true },
-      { icon: Check, text: "Unlimited monitoring", included: true },
+      { icon: Zap, text: "Ping every 6 minutes", included: true },
+      { icon: Check, text: "Unlimited credits", included: true },
       { icon: BarChart3, text: "Response time charts", included: true },
-      { icon: Timer, text: "Route testing tool", included: true, note: "Test any endpoint instantly" },
       { icon: Shield, text: "Priority support", included: true },
     ]
   };
@@ -206,15 +204,7 @@ export default function PricingPage() {
 
               {/* Pro Features Highlight */}
               <div className={`space-y-4 ${isProPlanUnderDevelopment ? 'opacity-75' : ''}`}>
-                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Timer className="w-4 h-4 text-orange-600" />
-                    <span className="font-semibold text-orange-800">Route Testing Tool</span>
-                  </div>
-                  <p className="text-orange-700 text-sm">
-                    Test any endpoint instantly! Send custom data, check response times, and debug issues. We don't store your test URLs or data.
-                  </p>
-                </div>
+
                 
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <div className="flex items-center space-x-2 mb-2">
@@ -263,7 +253,7 @@ export default function PricingPage() {
                     <td className="py-4 px-6 text-center text-gray-600">Every 10 min</td>
                     <td className="py-4 px-6 text-center">
                       <span className={`font-semibold ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`}>
-                        Every 10 min
+                        Every 6 min
                       </span>
                     </td>
                   </tr>
@@ -286,13 +276,7 @@ export default function PricingPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-4 px-6 font-medium text-gray-900">Route Testing Tool</td>
-                    <td className="py-4 px-6 text-center">
-                      <X className="w-5 h-5 text-gray-400 mx-auto" />
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <Check className={`w-5 h-5 mx-auto ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`} />
-                    </td>
+
                   </tr>
                   <tr className="bg-gray-50">
                     <td className="py-4 px-6 font-medium text-gray-900">Priority Support</td>

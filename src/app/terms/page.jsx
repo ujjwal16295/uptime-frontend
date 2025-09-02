@@ -44,7 +44,7 @@ export default function TermsOfService() {
 **4.2 NapStopper Paid Plan**
 • $1 one-time fee for unlimited monitoring time
 • Unlimited URLs
-• Pings every 10 minutes
+• Pings every 6 minutes
 • No need to manually request additional credits
 • All NapStopper fees are charged in advance`
     },

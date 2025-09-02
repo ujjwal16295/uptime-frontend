@@ -1,14 +1,8 @@
 "use client"
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { Play, Clock, CheckCircle, XCircle, Copy, Download, RotateCcw, Zap, Globe, Code, Lock } from 'lucide-react';
-import { supabase } from '../../lib/supabase'; // Adjust path as needed
+import React, { useState } from 'react';
+import { Play, Clock, CheckCircle, XCircle, Copy, Download, RotateCcw, Globe, Code } from 'lucide-react';
 
 export default function RouteTestingTool() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const plan = useSelector(state => state.plan.value);
-  
   const [url, setUrl] = useState('');
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState('{}');
@@ -19,37 +13,6 @@ export default function RouteTestingTool() {
   const [error, setError] = useState(null);
 
   const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
-
-  // Check authentication status
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-      
-      // If no user, redirect to home
-      if (!user) {
-        window.location.href = '/';
-        return;
-      }
-    };
-
-    getUser();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Redirect to home if no user
-      if (!session?.user) {
-        window.location.href = '/';
-        return;
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const testEndpoint = async () => {
     if (!url.trim()) {
@@ -158,292 +121,243 @@ export default function RouteTestingTool() {
     }
   };
 
-  // Show loading spinner while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Don't render anything if no user (will redirect)
-  if (!user) {
-    return null;
-  }
-
-  const isFreePlan = plan === 'free';
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        
-        {/* Free Plan Overlay */}
-        {isFreePlan && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-orange-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Premium Feature</h2>
-              <p className="text-gray-600 mb-6">
-                The API Route Testing Tool is available for premium users only. 
-                Upgrade your plan to access this powerful debugging feature.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => window.location.href = '/pricing'}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-200"
-                >
-                  Upgrade Now
-                </button>
-                <button
-                  onClick={() => window.location.href = '/'}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all duration-200"
-                >
-                  Go Back
-                </button>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Request Panel */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <Globe className="w-5 h-5 text-orange-600" />
+              <h2 className="text-xl font-semibold text-gray-800">Request Configuration</h2>
             </div>
-          </div>
-        )}
 
-        <div className={`${isFreePlan ? 'blur-sm pointer-events-none' : ''}`}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Request Panel */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
-              <div className="flex items-center space-x-2 mb-6">
-                <Globe className="w-5 h-5 text-orange-600" />
-                <h2 className="text-xl font-semibold text-gray-800">Request Configuration</h2>
-              </div>
-
-              {/* URL Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Endpoint URL
-                </label>
-                <div className="flex space-x-2">
-                  <select
-                    value={method}
-                    onChange={(e) => setMethod(e.target.value)}
-                    className="text-black px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  >
-                    {methods.map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://api.example.com/endpoint"
-                    className="text-black flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              {/* Headers */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Headers (JSON format)
-                </label>
-                <textarea
-                  value={headers}
-                  onChange={(e) => setHeaders(e.target.value)}
-                  placeholder='{"Authorization": "Bearer token", "Custom-Header": "value"}'
-                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent h-24 font-mono text-sm"
+            {/* URL Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Endpoint URL
+              </label>
+              <div className="flex space-x-2">
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value)}
+                  className="text-black px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  {methods.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://api.example.com/endpoint"
+                  className="text-black flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
-
-              {/* Request Body */}
-              {['POST', 'PUT', 'PATCH'].includes(method) && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Request Body
-                  </label>
-                  <textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder='{"key": "value"}'
-                    className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent h-32 font-mono text-sm"
-                  />
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={testEndpoint}
-                  disabled={testLoading}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:from-orange-700 hover:to-amber-700 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  {testLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Testing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4" />
-                      <span>Test Endpoint</span>
-                    </>
-                  )}
-                </button>
-                
-                <button
-                  onClick={clearAll}
-                  className="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
-                  title="Clear All"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              </div>
             </div>
 
-            {/* Response Panel */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <Code className="w-5 h-5 text-orange-600" />
-                  <h2 className="text-xl font-semibold text-gray-800">Response</h2>
-                </div>
-                
-                {response && (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={copyResponse}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Copy Response"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={downloadResponse}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Download Response"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+            {/* Headers */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Headers (JSON format)
+              </label>
+              <textarea
+                value={headers}
+                onChange={(e) => setHeaders(e.target.value)}
+                placeholder='{"Authorization": "Bearer token", "Custom-Header": "value"}'
+                className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent h-24 font-mono text-sm"
+              />
+            </div>
+
+            {/* Request Body */}
+            {['POST', 'PUT', 'PATCH'].includes(method) && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Request Body
+                </label>
+                <textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder='{"key": "value"}'
+                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent h-32 font-mono text-sm"
+                />
               </div>
+            )}
 
-              {/* Response Time */}
-              {responseTime !== null && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">
-                      Response Time: {formatResponseTime(responseTime)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Error Display */}
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <XCircle className="w-5 h-5 text-red-600" />
-                    <span className="font-medium text-red-800">Error</span>
-                  </div>
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              )}
-
-              {/* Success Response */}
-              {response && (
-                <div className="space-y-4">
-                  {/* Status */}
-                  <div className="flex items-center space-x-2 p-3 rounded-lg bg-gray-50">
-                    {response.ok ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600" />
-                    )}
-                    <span className={`font-medium ${response.ok ? 'text-green-800' : 'text-red-800'}`}>
-                      {response.status} {response.statusText}
-                    </span>
-                  </div>
-
-                  {/* Response Headers */}
-                  <div>
-                    <h3 className="font-medium text-gray-800 mb-2">Response Headers</h3>
-                    <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
-                      <pre className="text-xs font-mono text-gray-700">
-                        {JSON.stringify(response.headers, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-
-                  {/* Response Body */}
-                  <div>
-                    <h3 className="font-medium text-gray-800 mb-2">Response Body</h3>
-                    <div className="bg-gray-50 rounded-lg p-3 max-h-64 overflow-y-auto">
-                      <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
-                        {typeof response.data === 'string' 
-                          ? response.data 
-                          : JSON.stringify(response.data, null, 2)
-                        }
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {!response && !error && !testLoading && (
-                <div className="text-center py-12 text-gray-500">
-                  <Code className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Configure your request and click "Test Endpoint" to see the response</p>
-                </div>
-              )}
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={testEndpoint}
+                disabled={testLoading}
+                className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:from-orange-700 hover:to-amber-700 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {testLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Testing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Test Endpoint</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={clearAll}
+                className="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
+                title="Clear All"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Quick Examples */}
-          <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Examples</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => {
-                  setUrl('https://jsonplaceholder.typicode.com/posts/1');
-                  setMethod('GET');
-                  setHeaders('{}');
-                  setBody('');
-                }}
-                className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-800">GET Request</div>
-                <div className="text-sm text-gray-600">Fetch a JSON resource</div>
-              </button>
+          {/* Response Panel */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-2">
+                <Code className="w-5 h-5 text-orange-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Response</h2>
+              </div>
               
-              <button
-                onClick={() => {
-                  setUrl('https://jsonplaceholder.typicode.com/posts');
-                  setMethod('POST');
-                  setHeaders('{"Content-Type": "application/json"}');
-                  setBody('{\n  "title": "Test Post",\n  "body": "This is a test",\n  "userId": 1\n}');
-                }}
-                className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-800">POST Request</div>
-                <div className="text-sm text-gray-600">Create a new resource</div>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setUrl('https://httpstat.us/200');
-                  setMethod('GET');
-                  setHeaders('{}');
-                  setBody('');
-                }}
-                className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-800">Status Test</div>
-                <div className="text-sm text-gray-600">Test HTTP status codes</div>
-              </button>
+              {response && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={copyResponse}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Copy Response"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={downloadResponse}
+                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Download Response"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Response Time */}
+            {responseTime !== null && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    Response Time: {formatResponseTime(responseTime)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Error Display */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <XCircle className="w-5 h-5 text-red-600" />
+                  <span className="font-medium text-red-800">Error</span>
+                </div>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* Success Response */}
+            {response && (
+              <div className="space-y-4">
+                {/* Status */}
+                <div className="flex items-center space-x-2 p-3 rounded-lg bg-gray-50">
+                  {response.ok ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  )}
+                  <span className={`font-medium ${response.ok ? 'text-green-800' : 'text-red-800'}`}>
+                    {response.status} {response.statusText}
+                  </span>
+                </div>
+
+                {/* Response Headers */}
+                <div>
+                  <h3 className="font-medium text-gray-800 mb-2">Response Headers</h3>
+                  <div className="bg-gray-50 rounded-lg p-3 max-h-32 overflow-y-auto">
+                    <pre className="text-xs font-mono text-gray-700">
+                      {JSON.stringify(response.headers, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+
+                {/* Response Body */}
+                <div>
+                  <h3 className="font-medium text-gray-800 mb-2">Response Body</h3>
+                  <div className="bg-gray-50 rounded-lg p-3 max-h-64 overflow-y-auto">
+                    <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+                      {typeof response.data === 'string' 
+                        ? response.data 
+                        : JSON.stringify(response.data, null, 2)
+                      }
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!response && !error && !testLoading && (
+              <div className="text-center py-12 text-gray-500">
+                <Code className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Configure your request and click "Test Endpoint" to see the response</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Examples */}
+        <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Examples</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => {
+                setUrl('https://jsonplaceholder.typicode.com/posts/1');
+                setMethod('GET');
+                setHeaders('{}');
+                setBody('');
+              }}
+              className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="font-medium text-gray-800">GET Request</div>
+              <div className="text-sm text-gray-600">Fetch a JSON resource</div>
+            </button>
+            
+            <button
+              onClick={() => {
+                setUrl('https://jsonplaceholder.typicode.com/posts');
+                setMethod('POST');
+                setHeaders('{"Content-Type": "application/json"}');
+                setBody('{\n  "title": "Test Post",\n  "body": "This is a test",\n  "userId": 1\n}');
+              }}
+              className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="font-medium text-gray-800">POST Request</div>
+              <div className="text-sm text-gray-600">Create a new resource</div>
+            </button>
+            
+            <button
+              onClick={() => {
+                setUrl('https://httpstat.us/200');
+                setMethod('GET');
+                setHeaders('{}');
+                setBody('');
+              }}
+              className="p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <div className="font-medium text-gray-800">Status Test</div>
+              <div className="text-sm text-gray-600">Test HTTP status codes</div>
+            </button>
           </div>
         </div>
       </div>
