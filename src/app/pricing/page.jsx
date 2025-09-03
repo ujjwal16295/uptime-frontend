@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Check, 
   X, 
@@ -13,14 +13,49 @@ import {
   Star,
   ArrowRight,
   RefreshCw,
-  Wrench
+  Wrench,
+  LogIn
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase'; // Adjust path as needed
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   
   // Control variable for development status
-  const isProPlanUnderDevelopment = true; // Set to true to show "Under Development"
+  const isProPlanUnderDevelopment = false; // Set to true to show "Under Development"
+
+  // Check authentication status
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    getUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+  
 
   const features = {
     free: [
@@ -40,6 +75,121 @@ export default function PricingPage() {
     ]
   };
 
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
+
+  const handleUpgrade = async () => {
+    // Check if user is logged in
+    if (!user) {
+      alert('Please log in to upgrade to Pro plan.');
+      return;
+    }
+
+    try {
+      // Use the actual user email from authentication
+      const userEmail = user.email;
+      
+      // Create order on backend
+      const response = await fetch('/api/payment/create-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: userEmail,
+          plan: 'monthly' 
+        }),
+      });
+      
+      const { order, subscription } = await response.json();
+      
+      // Initialize Razorpay
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to your .env
+        subscription_id: subscription.id,
+        name: 'NapStopper',
+        description: 'Pro Plan Monthly Subscription',
+        handler: async function (response) {
+          // Send payment details to backend for verification
+          const verifyResponse = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+              email: userEmail
+            }),
+          });
+          
+          if (verifyResponse.ok) {
+            alert('Payment successful! Your account has been upgraded.');
+            // Refresh page or update UI state
+            window.location.reload();
+          }
+        },
+        prefill: {
+          email: userEmail,
+        },
+        theme: {
+          color: '#ea580c'
+        }
+      };
+      
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+    }
+  };
+
+  // Determine button state and handler
+  const getProPlanButtonConfig = () => {
+    if (loading) {
+      return {
+        disabled: true,
+        text: 'Loading...',
+        icon: null,
+        handler: null,
+        className: 'bg-gray-400 cursor-not-allowed'
+      };
+    }
+
+    if (isProPlanUnderDevelopment) {
+      return {
+        disabled: true,
+        text: 'Coming Soon',
+        icon: <Wrench className="w-4 h-4 mr-2 inline" />,
+        handler: null,
+        className: 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+      };
+    }
+
+    if (!user) {
+      return {
+        disabled: false,
+        text: 'Login to Upgrade',
+        icon: <LogIn className="w-4 h-4 mr-2 inline" />,
+        handler: handleLogin,
+        className: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 shadow-lg'
+      };
+    }
+
+    return {
+      disabled: false,
+      text: 'Upgrade to Pro',
+      icon: <ArrowRight className="w-4 h-4 ml-2 inline" />,
+      handler: handleUpgrade,
+      className: 'bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:from-orange-700 hover:to-amber-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 shadow-lg'
+    };
+  };
+
+  const buttonConfig = getProPlanButtonConfig();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <div className="max-w-7xl mx-auto px-4 py-16">
@@ -51,6 +201,23 @@ export default function PricingPage() {
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Choose the perfect plan for your monitoring needs. Start free and upgrade when you're ready for more power.
           </p>
+          
+          {/* Authentication Status Indicator */}
+          {!loading && (
+            <div className="flex justify-center mb-8">
+              {user ? (
+                <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Logged in as {user.email}</span>
+                </div>
+              ) : (
+                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
+                  <LogIn className="w-4 h-4" />
+                  <span>Login required to upgrade to Pro</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Pricing Cards */}
@@ -137,6 +304,16 @@ export default function PricingPage() {
               </div>
             )}
             
+            {/* Authentication Required Badge */}
+            {!user && !loading && !isProPlanUnderDevelopment && (
+              <div className="absolute top-4 right-4 z-10">
+                <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
+                  <LogIn className="w-3 h-3" />
+                  <span>Login Required</span>
+                </div>
+              </div>
+            )}
+            
             <div className="p-8 pt-12">
               {/* Plan Header */}
               <div className="text-center mb-8">
@@ -145,7 +322,12 @@ export default function PricingPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
                 <p className="text-gray-600 mb-6">
-                  {isProPlanUnderDevelopment ? "Coming soon with powerful features" : "For serious monitoring needs"}
+                  {isProPlanUnderDevelopment 
+                    ? "Coming soon with powerful features" 
+                    : !user 
+                    ? "Login required to access Pro features"
+                    : "For serious monitoring needs"
+                  }
                 </p>
                 
                 <div className="mb-6">
@@ -154,35 +336,26 @@ export default function PricingPage() {
                 </div>
                 
                 <button 
-                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg transform ${
-                    isProPlanUnderDevelopment 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:from-orange-700 hover:to-amber-700 hover:shadow-xl hover:-translate-y-0.5'
-                  }`}
-                  disabled={isProPlanUnderDevelopment}
+                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${buttonConfig.className}`}
+                  onClick={buttonConfig.handler}
+                  disabled={buttonConfig.disabled}
                 >
-                  {isProPlanUnderDevelopment ? (
-                    <>
-                      <Wrench className="w-4 h-4 mr-2 inline" />
-                      Coming Soon
-                    </>
-                  ) : (
-                    <>
-                      Upgrade to Pro
-                      <ArrowRight className="w-4 h-4 ml-2 inline" />
-                    </>
-                  )}
+                  {buttonConfig.icon}
+                  {buttonConfig.text}
                 </button>
                 
-                {isProPlanUnderDevelopment && (
+                {(isProPlanUnderDevelopment || (!user && !loading)) && (
                   <p className="text-xs text-gray-500 mt-2">
-                    We're working hard to bring you these amazing features!
+                    {isProPlanUnderDevelopment 
+                      ? "We're working hard to bring you these amazing features!"
+                      : "Please log in to access Pro plan features"
+                    }
                   </p>
                 )}
               </div>
 
               {/* Features */}
-              <div className={`space-y-4 mb-6 ${isProPlanUnderDevelopment ? 'opacity-75' : ''}`}>
+              <div className={`space-y-4 mb-6 ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'opacity-75' : ''}`}>
                 <h4 className="font-semibold text-gray-900 text-lg mb-4">Everything in Pro:</h4>
                 {features.paid.map((feature, index) => {
                   const IconComponent = feature.icon;
@@ -203,9 +376,7 @@ export default function PricingPage() {
               </div>
 
               {/* Pro Features Highlight */}
-              <div className={`space-y-4 ${isProPlanUnderDevelopment ? 'opacity-75' : ''}`}>
-
-                
+              <div className={`space-y-4 ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'opacity-75' : ''}`}>
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <div className="flex items-center space-x-2 mb-2">
                     <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -234,7 +405,11 @@ export default function PricingPage() {
                     <th className="text-left py-4 px-6 font-semibold text-gray-900">Features</th>
                     <th className="text-center py-4 px-6 font-semibold text-gray-900">Free</th>
                     <th className="text-center py-4 px-6 font-semibold text-gray-900">
-                      Pro {isProPlanUnderDevelopment && <span className="text-xs text-amber-600">(Coming Soon)</span>}
+                      Pro {(isProPlanUnderDevelopment || (!user && !loading)) && (
+                        <span className="text-xs text-amber-600">
+                          {isProPlanUnderDevelopment ? "(Coming Soon)" : "(Login Required)"}
+                        </span>
+                      )}
                     </th>
                   </tr>
                 </thead>
@@ -243,7 +418,7 @@ export default function PricingPage() {
                     <td className="py-4 px-6 font-medium text-gray-900">Number of URLs</td>
                     <td className="py-4 px-6 text-center text-gray-600">Up to 3</td>
                     <td className="py-4 px-6 text-center">
-                      <span className={`font-semibold ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`}>
+                      <span className={`font-semibold ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`}>
                         Unlimited
                       </span>
                     </td>
@@ -252,7 +427,7 @@ export default function PricingPage() {
                     <td className="py-4 px-6 font-medium text-gray-900">Ping Frequency</td>
                     <td className="py-4 px-6 text-center text-gray-600">Every 10 min</td>
                     <td className="py-4 px-6 text-center">
-                      <span className={`font-semibold ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`}>
+                      <span className={`font-semibold ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`}>
                         Every 6 min
                       </span>
                     </td>
@@ -261,7 +436,7 @@ export default function PricingPage() {
                     <td className="py-4 px-6 font-medium text-gray-900">Monitoring Credits</td>
                     <td className="py-4 px-6 text-center text-gray-600">Manual requests</td>
                     <td className="py-4 px-6 text-center">
-                      <span className={`font-semibold ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`}>
+                      <span className={`font-semibold ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`}>
                         Unlimited
                       </span>
                     </td>
@@ -272,19 +447,16 @@ export default function PricingPage() {
                       <X className="w-5 h-5 text-gray-400 mx-auto" />
                     </td>
                     <td className="py-4 px-6 text-center">
-                      <Check className={`w-5 h-5 mx-auto ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`} />
+                      <Check className={`w-5 h-5 mx-auto ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`} />
                     </td>
                   </tr>
                   <tr>
-
-                  </tr>
-                  <tr className="bg-gray-50">
                     <td className="py-4 px-6 font-medium text-gray-900">Priority Support</td>
                     <td className="py-4 px-6 text-center">
                       <X className="w-5 h-5 text-gray-400 mx-auto" />
                     </td>
                     <td className="py-4 px-6 text-center">
-                      <Check className={`w-5 h-5 mx-auto ${isProPlanUnderDevelopment ? 'text-gray-500' : 'text-orange-600'}`} />
+                      <Check className={`w-5 h-5 mx-auto ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`} />
                     </td>
                   </tr>
                 </tbody>
