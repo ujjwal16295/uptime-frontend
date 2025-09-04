@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield, AlertTriangle, Code } from 'lucide-react';
+import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield, AlertTriangle, Code, BarChart3 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
@@ -299,12 +299,12 @@ export default function Header() {
                       </button>
                       <hr className="my-2 border-gray-100" />
                       <button
-                        onClick={handleReporting}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>Report</span>
-                      </button>
+  onClick={handleReporting}
+  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+>
+  <BarChart3 className="w-4 h-4" />
+  <span>Report</span>
+</button>
                       <button
                         onClick={handleTestEndPoint}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"

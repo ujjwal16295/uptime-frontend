@@ -26,7 +26,7 @@ export default function TermsOfService() {
       icon: Users,
       content: `**NapStopper Account Plans:**
 • **Free Plan**: Up to 3 URLs, 21,600 minutes of initial free credits, additional free credits available through manual requests
-• **Paid Plan**: Up to 3 URLs, unlimited monitoring time for $1 one-time fee
+• **Paid Plan**: Up to 3 URLs, unlimited monitoring time for ₹90 one-time fee
 • NapStopper reserves the right to limit the total number of users during beta periods`
     },
     {
@@ -42,11 +42,17 @@ export default function TermsOfService() {
 • NapStopper reserves the right to limit or modify free credit distribution at any time
 
 **4.2 NapStopper Paid Plan**
-• $1 one-time fee for unlimited monitoring time
+• ₹90 one-time fee for unlimited monitoring time
 • Unlimited URLs
 • Pings every 6 minutes
 • No need to manually request additional credits
-• All NapStopper fees are charged in advance`
+• All NapStopper fees are charged in advance
+
+**4.3 NapStopper Plan Cancellation**
+• You may cancel your paid plan at any time through your NapStopper account settings
+• Upon cancellation, your account will be immediately reverted to the free plan
+• You will retain access to the free plan benefits (up to 3 URLs, manual credit requests)
+• No refunds will be provided for unused time on paid plans as per the no-refund policy`
     },
     {
       id: "payment",
@@ -58,7 +64,7 @@ export default function TermsOfService() {
 
 **5.2 NapStopper No Refund Policy**
 **ALL NAPSTOPPER SALES ARE FINAL. NapStopper does not provide refunds for any purchases, including but not limited to:**
-• The $1 NapStopper paid plan fee
+• The ₹90 NapStopper paid plan fee
 • Unused NapStopper credits (free users only)
 • NapStopper service cancellations
 • Dissatisfaction with NapStopper service performance
@@ -67,7 +73,7 @@ export default function TermsOfService() {
 
 **5.3 NapStopper Credit System**
 • **Free Users**: Credits are consumed based on NapStopper usage (per minute of monitoring). When credits run low, you must manually visit the NapStopper platform and request additional free credits through the "Add Credit" feature
-• **Paid Users**: Unlimited monitoring time after one-time $1 payment to NapStopper
+• **Paid Users**: Unlimited monitoring time after one-time ₹90 payment to NapStopper
 • Free credits do not expire but are non-transferable and non-refundable
 • You are responsible for monitoring your NapStopper credit balance (free users only)
 • NapStopper reserves the right to modify free credit amounts and distribution methods`
@@ -157,7 +163,7 @@ export default function TermsOfService() {
               </div>
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                <span>NapStopper paid plan: $1 for unlimited time</span>
+                <span>NapStopper paid plan: ₹90 for unlimited time</span>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
@@ -165,7 +171,7 @@ export default function TermsOfService() {
               </div>
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                <span>NapStopper 10-minute ping intervals for all plans</span>
+                <span>NapStopper plan cancellation reverts to free plan immediately</span>
               </div>
             </div>
           </div>

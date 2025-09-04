@@ -309,7 +309,7 @@ export default function PricingPage() {
                   <p className="text-gray-600 mb-6">Perfect for getting started</p>
                   
                   <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">$0</span>
+                    <span className="text-5xl font-bold text-gray-900">₹0</span>
                     <span className="text-gray-500 text-lg">/forever</span>
                   </div>
                   
@@ -434,7 +434,7 @@ export default function PricingPage() {
                   </p>
                   
                   <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">$1</span>
+                    <span className="text-5xl font-bold text-gray-900">₹90</span>
                     <span className="text-gray-500 text-lg">/monthly</span>
                   </div>
                   
