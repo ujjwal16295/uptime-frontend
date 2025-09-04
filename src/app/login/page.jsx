@@ -31,6 +31,7 @@ export default function LoginPage() {
   }, []);
 
   const handleGitHubLogin = async () => {
+    // Set loading state immediately when function is called
     setIsLoading(true);
     setMessage(null);
 
@@ -78,7 +79,7 @@ export default function LoginPage() {
               <button
                 onClick={handleGitHubLogin}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-3 rounded-lg font-semibold hover:from-gray-900 hover:to-black transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-3 rounded-lg font-semibold hover:from-gray-900 hover:to-black transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-lg"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">

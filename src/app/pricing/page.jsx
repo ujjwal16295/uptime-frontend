@@ -14,7 +14,8 @@ import {
   ArrowRight,
   RefreshCw,
   Wrench,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
 import Script from 'next/script';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
@@ -23,6 +24,7 @@ import { useSelector } from 'react-redux';
 export default function PricingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [upgradeLoading, setUpgradeLoading] = useState(false); // Add loading state for upgrade
   const plan = useSelector(state => state.plan.value);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -85,6 +87,8 @@ export default function PricingPage() {
       return;
     }
   
+    setUpgradeLoading(true); // Start loading
+    
     try {
       // Use the actual user email from authentication
       const userEmail = user.email;
@@ -119,6 +123,12 @@ export default function PricingPage() {
             window.location.reload();
           }, 2000);
         },
+        modal: {
+          ondismiss: function() {
+            // Re-enable button if payment modal is closed without completion
+            setUpgradeLoading(false);
+          }
+        },
         prefill: {
           email: userEmail,
         },
@@ -129,9 +139,12 @@ export default function PricingPage() {
       
       const rzp = new window.Razorpay(options);
       rzp.open();
+      
+      // Don't set loading to false here as we want to keep it disabled until payment completes or modal closes
     } catch (error) {
       console.error('Payment error:', error);
       alert('Payment failed. Please try again.');
+      setUpgradeLoading(false); // Re-enable button on error
     }
   };
 
@@ -206,6 +219,17 @@ export default function PricingPage() {
         icon: <LogIn className="w-4 h-4 mr-2 inline" />,
         handler: handleLogin,
         className: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 shadow-lg'
+      };
+    }
+
+    // Show loading state when upgrade is in progress
+    if (upgradeLoading) {
+      return {
+        disabled: true,
+        text: 'Processing...',
+        icon: <Loader2 className="w-4 h-4 mr-2 inline animate-spin" />,
+        handler: null,
+        className: 'bg-gradient-to-r from-orange-400 to-amber-400 cursor-not-allowed'
       };
     }
 
@@ -422,6 +446,12 @@ export default function PricingPage() {
                     {proButtonConfig.icon}
                     {proButtonConfig.text}
                   </button>
+                  
+                  {upgradeLoading && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Please wait while we process your upgrade...
+                    </p>
+                  )}
                   
                   {isProPlanUnderDevelopment && (
                     <p className="text-xs text-gray-500 mt-2">
