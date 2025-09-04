@@ -76,7 +76,7 @@ export default function PricingPage() {
       alert('Please log in to upgrade to Pro plan.');
       return;
     }
-
+  
     try {
       // Use the actual user email from authentication
       const userEmail = user.email;
@@ -93,34 +93,23 @@ export default function PricingPage() {
         }),
       });
       
-      const { order, subscription } = await response.json();
+      const { subscription } = await response.json();
       
       // Initialize Razorpay
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to your .env
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         subscription_id: subscription.id,
         name: 'NapStopper',
         description: 'Pro Plan Monthly Subscription',
-        handler: async function (response) {
-          // Send payment details to backend for verification
-          const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-              email: userEmail
-            }),
-          });
+        handler: function (response) {
+          // Just show success - webhooks handle the actual upgrade
+          alert('Payment successful! Your account will be upgraded shortly.');
+          console.log('Payment completed:', response);
           
-          if (verifyResponse.ok) {
-            alert('Payment successful! Your account has been upgraded.');
-            // Refresh page or update UI state
+          // Refresh after a short delay to see updated status
+          setTimeout(() => {
             window.location.reload();
-          }
+          }, 2000);
         },
         prefill: {
           email: userEmail,
