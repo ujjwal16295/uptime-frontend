@@ -45,8 +45,6 @@ export default function PricingPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  
-
   const features = {
     free: [
       { icon: Globe, text: "Up to 3 URLs", included: true },
@@ -69,72 +67,15 @@ export default function PricingPage() {
     window.location.href = '/login';
   };
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
     // Check if user is logged in
     if (!user) {
       alert('Please log in to upgrade to Pro plan.');
       return;
     }
 
-    try {
-      // Use the actual user email from authentication
-      const userEmail = user.email;
-      
-      // Create order on backend
-      const response = await fetch('/api/payment/create-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: userEmail,
-          plan: 'monthly' 
-        }),
-      });
-      
-      const { order, subscription } = await response.json();
-      
-      // Initialize Razorpay
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Add this to your .env
-        subscription_id: subscription.id,
-        name: 'NapStopper',
-        description: 'Pro Plan Monthly Subscription',
-        handler: async function (response) {
-          // Send payment details to backend for verification
-          const verifyResponse = await fetch('/api/payment/verify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-              email: userEmail
-            }),
-          });
-          
-          if (verifyResponse.ok) {
-            alert('Payment successful! Your account has been upgraded.');
-            // Refresh page or update UI state
-            window.location.reload();
-          }
-        },
-        prefill: {
-          email: userEmail,
-        },
-        theme: {
-          color: '#ea580c'
-        }
-      };
-      
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
-    }
+    // Redirect to the payment link
+    window.open('https://rzp.io/rzp/UhfKoYIM', '_blank');
   };
 
   // Determine button state and handler
