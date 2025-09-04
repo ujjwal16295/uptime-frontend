@@ -111,6 +111,8 @@ export default function PricingPage() {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         subscription_id: subscription.id,
+        callback_url: 'https://uptime-frontend-ivory.vercel.app/dashboard',
+        redirect: true,
         name: 'NapStopper',
         description: 'Pro Plan Monthly Subscription',
         handler: function (response) {
