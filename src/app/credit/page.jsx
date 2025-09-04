@@ -6,9 +6,9 @@ import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { ChangeCredit } from '../../store/CreditSlice'; // Adjust path as needed
 import { clearCreditSession } from '../../utils/sessionStorage'; // Adjust path as needed
 
-// Constants
-const CREDIT_TO_ADD = 43200;
-const MAX_CREDIT_LIMIT = 70000;
+// Constants - Updated values
+const CREDIT_TO_ADD = 2000;
+const MAX_CREDIT_LIMIT = 25000;
 
 export default function CreditPage() {
   const [user, setUser] = useState(null);
@@ -16,6 +16,7 @@ export default function CreditPage() {
   const [loadingCredit, setLoadingCredit] = useState(false);
   const [isAddingCredit, setIsAddingCredit] = useState(false);
   const [addCreditMessage, setAddCreditMessage] = useState(null);
+  const plan = useSelector(state => state.plan.value);
 
   // Redux state and dispatch
   const dispatch = useDispatch();
@@ -27,6 +28,8 @@ export default function CreditPage() {
   // Helper functions for credit limit checking
   const canAddCredits = () => {
     if (!creditDetails || loadingCredit) return false;
+    // Disable for paid users
+    if (plan === 'paid') return false;
     return (creditDetails + CREDIT_TO_ADD) <= MAX_CREDIT_LIMIT;
   };
 
@@ -127,7 +130,7 @@ export default function CreditPage() {
     return () => subscription.unsubscribe();
   }, [fetchUserCredit, dispatch]);
 
-  // Enhanced function to add credits with 70k limit handling
+  // Enhanced function to add credits with limit handling
   const handleAddCredit = async () => {
     if (!user?.email) {
       setAddCreditMessage({
@@ -137,13 +140,16 @@ export default function CreditPage() {
       return;
     }
 
-    // Check if adding credits would exceed limit (client-side prevention)
+    // Check if adding credits would exceed limit or if user is on paid plan
     if (!canAddCredits()) {
       const remainingCapacity = getRemainingCapacity();
       let errorMessage;
       
-      if (remainingCapacity > 0) {
-        errorMessage = `Cannot add 43,200 minutes. You can only add ${remainingCapacity.toLocaleString()} more minutes to stay within the ${MAX_CREDIT_LIMIT.toLocaleString()} minute limit.`;
+      // Check if user has paid plan
+      if (plan === 'paid') {
+        errorMessage = 'Credit addition is not available for paid plan users.';
+      } else if (remainingCapacity > 0) {
+        errorMessage = `Cannot add ${CREDIT_TO_ADD.toLocaleString()} minutes. You can only add ${remainingCapacity.toLocaleString()} more minutes to stay within the ${MAX_CREDIT_LIMIT.toLocaleString()} minute limit.`;
       } else {
         errorMessage = `You've reached the maximum credit limit of ${MAX_CREDIT_LIMIT.toLocaleString()} minutes. No additional credits can be added.`;
       }
@@ -174,7 +180,7 @@ export default function CreditPage() {
       if (response.ok) {
         setAddCreditMessage({
           type: 'success',
-          text: `Successfully added 43,200 minutes! Your new balance is ${data.data.new_credit.toLocaleString()} minutes.`
+          text: `Successfully added ${CREDIT_TO_ADD.toLocaleString()} minutes! Your new balance is ${data.data.new_credit.toLocaleString()} minutes.`
         });
         
         // Update Redux store with new credit value and mark as successful
@@ -193,14 +199,17 @@ export default function CreditPage() {
         
         // Check for specific error types
         if (response.status === 400 && data.error === 'Credit limit exceeded') {
-          // Handle 70k limit exceeded error
+          // Handle limit exceeded error
           const remainingCapacity = data.data?.remaining_capacity || 0;
           
           if (remainingCapacity > 0) {
             errorMessage = `Credit limit reached! You can only add ${remainingCapacity.toLocaleString()} more minutes. Your current balance is ${data.data.current_credit.toLocaleString()} minutes (max: ${data.data.maximum_allowed.toLocaleString()}).`;
           } else {
-            errorMessage = `You've reached the maximum credit limit of ${data.data?.maximum_allowed?.toLocaleString() || '70,000'} minutes. No additional credits can be added.`;
+            errorMessage = `You've reached the maximum credit limit of ${data.data?.maximum_allowed?.toLocaleString() || '25,000'} minutes. No additional credits can be added.`;
           }
+        } else if (response.status === 429 && data.error === 'Daily limit reached') {
+          // Handle once-per-day limit
+          errorMessage = data.message || 'You can only add credits once per day. Please try again later.';
         } else if (response.status === 404) {
           errorMessage = 'User not found. Please add a URL first to create an account.';
         } else if (data.message) {
@@ -338,8 +347,8 @@ export default function CreditPage() {
                 <h4 className="text-2xl font-bold text-green-800">Free Credit Package</h4>
               </div>
               
-              <div className="text-4xl font-bold text-green-700 mb-2">43,200 Minutes</div>
-              <div className="text-lg text-green-600 mb-4">30 Days of Continuous Monitoring</div>
+              <div className="text-4xl font-bold text-green-700 mb-2">{CREDIT_TO_ADD.toLocaleString()} Minutes</div>
+              <div className="text-lg text-green-600 mb-4">1.4 Days of Continuous Monitoring</div>
               
               <div className="bg-white rounded-lg p-4 mb-6">
                 <div className="text-sm text-gray-600 space-y-2">
@@ -358,7 +367,7 @@ export default function CreditPage() {
                 </div>
               </div>
 
-              {/* Enhanced Button with Credit Limit Awareness */}
+              {/* Enhanced Button with Credit Limit and Plan Awareness */}
               <button
                 onClick={handleAddCredit}
                 disabled={isAddingCredit || loadingCredit || !canAddCredits()}
@@ -375,13 +384,24 @@ export default function CreditPage() {
                   </div>
                 ) : loadingCredit ? (
                   'Loading...'
+                ) : plan === 'paid' ? (
+                  'Not Available for Paid Users'
                 ) : (
-                  'Add 43,200 Minutes Free'
+                  `Add ${CREDIT_TO_ADD.toLocaleString()} Minutes Free`
                 )}
               </button>
 
-              {/* Credit Information Section */}
-              {!loadingCredit && creditDetails !== null && (
+              {/* Plan-specific message for paid users */}
+              {plan === 'paid' && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-blue-700 font-medium">
+                    Free credits are not available for paid plan users. Your paid subscription provides unlimited monitoring.
+                  </p>
+                </div>
+              )}
+
+              {/* Credit Information Section - Only show for free users */}
+              {!loadingCredit && creditDetails !== null && plan !== 'paid' && (
                 <div className="mt-6 text-sm text-gray-600 bg-white rounded-lg p-4 border border-gray-200">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
