@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
+import { useSelector } from 'react-redux';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -12,6 +13,8 @@ export default function DashboardPage() {
   const [loadingData, setLoadingData] = useState(false);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const plan = useSelector(state => state.plan.value);
+
 
   // Check authentication status
   useEffect(() => {
@@ -233,7 +236,7 @@ export default function DashboardPage() {
     </div>
     <div>
       <p className="text-2xl font-bold text-gray-900 capitalize">
-        {userData.user.plan || 'free'}
+        {plan}
       </p>
       <p className="text-gray-600 text-sm">Current Plan</p>
     </div>
