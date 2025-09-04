@@ -298,9 +298,15 @@ export default function PricingPage() {
                     {freeButtonConfig.text}
                   </button>
                   
-                  {user && (
+                  {user && (!plan || plan === 'free') && plan !== 'paid' && plan !== 'pro' && (
                     <p className="text-xs text-gray-500 mt-2">
                       You're currently on the free plan
+                    </p>
+                  )}
+                  
+                  {user && (plan === 'paid' || plan === 'pro') && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      You have access to Pro features
                     </p>
                   )}
                 </div>
