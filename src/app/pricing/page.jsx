@@ -18,14 +18,15 @@ import {
 } from 'lucide-react';
 import Script from 'next/script';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
+import { useSelector } from 'react-redux';
 
 export default function PricingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const plan = useSelector(state => state.plan.value);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  
   // Control variable for development status
   const isProPlanUnderDevelopment = false; // Set to true to show "Under Development"
 
@@ -68,6 +69,13 @@ export default function PricingPage() {
 
   const handleLogin = () => {
     window.location.href = '/login';
+  };
+
+  const handleFreeGetStarted = () => {
+    if (!user) {
+      window.location.href = '/login';
+    }
+    // If user is logged in, don't do anything
   };
 
   const handleUpgrade = async () => {
@@ -127,7 +135,38 @@ export default function PricingPage() {
     }
   };
 
-  // Determine button state and handler
+  // Determine Free plan button state and handler
+  const getFreeButtonConfig = () => {
+    if (loading) {
+      return {
+        disabled: true,
+        text: 'Loading...',
+        icon: null,
+        handler: null,
+        className: 'bg-gray-400 cursor-not-allowed'
+      };
+    }
+
+    if (!user) {
+      return {
+        disabled: false,
+        text: 'Get Started Free',
+        icon: <ArrowRight className="w-4 h-4 ml-2 inline" />,
+        handler: handleFreeGetStarted,
+        className: 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+      };
+    }
+
+    return {
+      disabled: true,
+      text: 'Current Plan',
+      icon: <Check className="w-4 h-4 ml-2 inline" />,
+      handler: null,
+      className: 'bg-gray-100 text-gray-500 cursor-default'
+    };
+  };
+
+  // Determine Pro plan button state and handler
   const getProPlanButtonConfig = () => {
     if (loading) {
       return {
@@ -146,6 +185,17 @@ export default function PricingPage() {
         icon: <Wrench className="w-4 h-4 mr-2 inline" />,
         handler: null,
         className: 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+      };
+    }
+
+    // Check if user already has paid plan
+    if (plan === 'paid' || plan === 'pro') {
+      return {
+        disabled: true,
+        text: 'Current Plan',
+        icon: <Check className="w-4 h-4 mr-2 inline" />,
+        handler: null,
+        className: 'bg-gray-100 text-gray-500 cursor-default'
       };
     }
 
@@ -168,7 +218,8 @@ export default function PricingPage() {
     };
   };
 
-  const buttonConfig = getProPlanButtonConfig();
+  const freeButtonConfig = getFreeButtonConfig();
+  const proButtonConfig = getProPlanButtonConfig();
 
   return (
     <>
@@ -196,6 +247,9 @@ export default function PricingPage() {
                   <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span>Logged in as {user.email}</span>
+                    {(plan === 'paid' || plan === 'pro') && (
+                      <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs ml-2">PRO</span>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
@@ -211,6 +265,16 @@ export default function PricingPage() {
           <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Free Plan */}
             <div className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden relative h-fit">
+              {/* Current Plan Badge for Free Plan */}
+              {user && (!plan || plan === 'free') && (
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
+                    <Check className="w-3 h-3" />
+                    <span>Current Plan</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="p-8">
                 {/* Plan Header */}
                 <div className="text-center mb-8">
@@ -225,10 +289,20 @@ export default function PricingPage() {
                     <span className="text-gray-500 text-lg">/forever</span>
                   </div>
                   
-                  <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                    Get Started Free
-                    <ArrowRight className="w-4 h-4 ml-2 inline" />
+                  <button 
+                    className={`w-full py-3 px-6 rounded-xl font-semibold ${freeButtonConfig.className}`}
+                    onClick={freeButtonConfig.handler}
+                    disabled={freeButtonConfig.disabled}
+                  >
+                    {freeButtonConfig.icon}
+                    {freeButtonConfig.text}
                   </button>
+                  
+                  {user && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      You're currently on the free plan
+                    </p>
+                  )}
                 </div>
 
                 {/* Features */}
@@ -291,8 +365,18 @@ export default function PricingPage() {
                 </div>
               )}
               
+              {/* Current Plan Badge for Pro Plan */}
+              {(plan === 'paid' || plan === 'pro') && !isProPlanUnderDevelopment && (
+                <div className="absolute top-4 right-4 z-10">
+                  <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
+                    <Check className="w-3 h-3" />
+                    <span>Current Plan</span>
+                  </div>
+                </div>
+              )}
+              
               {/* Authentication Required Badge */}
-              {!user && !loading && !isProPlanUnderDevelopment && (
+              {!user && !loading && !isProPlanUnderDevelopment && !(plan === 'paid' || plan === 'pro') && (
                 <div className="absolute top-4 right-4 z-10">
                   <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
                     <LogIn className="w-3 h-3" />
@@ -311,6 +395,8 @@ export default function PricingPage() {
                   <p className="text-gray-600 mb-6">
                     {isProPlanUnderDevelopment 
                       ? "Coming soon with powerful features" 
+                      : (plan === 'paid' || plan === 'pro')
+                      ? "Your current Pro plan with all features"
                       : !user 
                       ? "Login required to access Pro features"
                       : "For serious monitoring needs"
@@ -323,20 +409,29 @@ export default function PricingPage() {
                   </div>
                   
                   <button 
-                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${buttonConfig.className}`}
-                    onClick={buttonConfig.handler}
-                    disabled={buttonConfig.disabled}
+                    className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${proButtonConfig.className}`}
+                    onClick={proButtonConfig.handler}
+                    disabled={proButtonConfig.disabled}
                   >
-                    {buttonConfig.icon}
-                    {buttonConfig.text}
+                    {proButtonConfig.icon}
+                    {proButtonConfig.text}
                   </button>
                   
-                  {(isProPlanUnderDevelopment || (!user && !loading)) && (
+                  {isProPlanUnderDevelopment && (
                     <p className="text-xs text-gray-500 mt-2">
-                      {isProPlanUnderDevelopment 
-                        ? "We're working hard to bring you these amazing features!"
-                        : "Please log in to access Pro plan features"
-                      }
+                      We're working hard to bring you these amazing features!
+                    </p>
+                  )}
+                  
+                  {(plan === 'paid' || plan === 'pro') && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      You already have access to all Pro features
+                    </p>
+                  )}
+                  
+                  {!user && !loading && !isProPlanUnderDevelopment && !(plan === 'paid' || plan === 'pro') && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Please log in to access Pro plan features
                     </p>
                   )}
                 </div>
