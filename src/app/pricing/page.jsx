@@ -22,6 +22,9 @@ import { supabase } from '../../lib/supabase'; // Adjust path as needed
 export default function PricingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
   
   // Control variable for development status
   const isProPlanUnderDevelopment = false; // Set to true to show "Under Development"
@@ -79,7 +82,7 @@ export default function PricingPage() {
       const userEmail = user.email;
       
       // Create order on backend
-      const response = await fetch('/api/payment/create-subscription', {
+      const response = await fetch(`${API_BASE_URL}/api/payment/create-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +103,7 @@ export default function PricingPage() {
         description: 'Pro Plan Monthly Subscription',
         handler: async function (response) {
           // Send payment details to backend for verification
-          const verifyResponse = await fetch('/api/payment/verify', {
+          const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
