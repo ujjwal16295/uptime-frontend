@@ -17,20 +17,38 @@ import {
   LogIn,
   Loader2
 } from 'lucide-react';
-import Script from 'next/script';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { useSelector } from 'react-redux';
+import { initializePaddle } from "@paddle/paddle-js";
 
 export default function PricingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [upgradeLoading, setUpgradeLoading] = useState(false); // Add loading state for upgrade
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [paddle, setPaddle] = useState();
   const plan = useSelector(state => state.plan.value);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   // Control variable for development status
-  const isProPlanUnderDevelopment = false; // Set to true to show "Under Development"
+  const isProPlanUnderDevelopment = false;
+
+  // Initialize Paddle
+  useEffect(() => {
+    initializePaddle({
+      environment: "production", // Change to "sandbox" for testing
+      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+      eventCallback: function(data) {
+        if (data.name === "checkout.completed") {
+          console.log("Checkout completed:", data);
+          // Handle successful checkout
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }
+      }
+    }).then((paddleInstance) => setPaddle(paddleInstance));
+  }, []);
 
   // Check authentication status
   useEffect(() => {
@@ -86,14 +104,18 @@ export default function PricingPage() {
       alert('Please log in to upgrade to Pro plan.');
       return;
     }
+
+    if (!paddle) {
+      alert('Payment system not initialized. Please try again.');
+      return;
+    }
   
-    setUpgradeLoading(true); // Start loading
+    setUpgradeLoading(true);
     
     try {
-      // Use the actual user email from authentication
       const userEmail = user.email;
       
-      // Create order on backend
+      // Create subscription on backend
       const response = await fetch(`${API_BASE_URL}/api/payment/create-subscription`, {
         method: 'POST',
         headers: {
@@ -105,48 +127,28 @@ export default function PricingPage() {
         }),
       });
       
-      const { subscription } = await response.json();
+      const { priceId } = await response.json();
       
-      // Initialize Razorpay
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        subscription_id: subscription.id,
-        callback_url: 'https://uptime-frontend-ivory.vercel.app/dashboard',
-        redirect: true,
-        name: 'NapStopper',
-        description: 'Pro Plan Monthly Subscription',
-        handler: function (response) {
-          // Just show success - webhooks handle the actual upgrade
-          alert('Payment successful! Your account will be upgraded shortly.');
-          console.log('Payment completed:', response);
-          
-          // Refresh after a short delay to see updated status
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+      // Open Paddle checkout
+      paddle.Checkout.open({
+        items: [{ priceId: priceId, quantity: 1 }],
+        settings: {
+          displayMode: "overlay",
+          theme: "light",
+          successUrl: window.location.origin + "/dashboard",
         },
-        modal: {
-          ondismiss: function() {
-            // Re-enable button if payment modal is closed without completion
-            setUpgradeLoading(false);
-          }
-        },
-        prefill: {
+        customData: {
+          userId: user.id,
           email: userEmail,
-        },
-        theme: {
-          color: '#ea580c'
+          planType: 'paid'
         }
-      };
-      
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      });
       
       // Don't set loading to false here as we want to keep it disabled until payment completes or modal closes
     } catch (error) {
       console.error('Payment error:', error);
       alert('Payment failed. Please try again.');
-      setUpgradeLoading(false); // Re-enable button on error
+      setUpgradeLoading(false);
     }
   };
 
@@ -248,13 +250,7 @@ export default function PricingPage() {
   const proButtonConfig = getProPlanButtonConfig();
 
   return (
-    <>
-      {/* Razorpay Script */}
-      <Script 
-        src="https://checkout.razorpay.com/v1/checkout.js" 
-        strategy="lazyOnload"
-      />
-      
+    <>      
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
         <div className="max-w-7xl mx-auto px-4 py-16">
           {/* Header */}
@@ -311,7 +307,7 @@ export default function PricingPage() {
                   <p className="text-gray-600 mb-6">Perfect for getting started</p>
                   
                   <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">₹0</span>
+                    <span className="text-5xl font-bold text-gray-900">$0</span>
                     <span className="text-gray-500 text-lg">/forever</span>
                   </div>
                   
@@ -436,7 +432,7 @@ export default function PricingPage() {
                   </p>
                   
                   <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">₹90</span>
+                    <span className="text-5xl font-bold text-gray-900">$1</span>
                     <span className="text-gray-500 text-lg">/monthly</span>
                   </div>
                   
