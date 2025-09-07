@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge, X } from 'lucide-react';
+import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { useSelector } from 'react-redux';
 
@@ -14,7 +14,9 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
+  const [reactivatingSubscription, setReactivatingSubscription] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const plan = useSelector(state => state.plan.value);
 
@@ -150,7 +152,7 @@ export default function DashboardPage() {
         throw new Error(data.message || 'Failed to cancel subscription');
       }
 
-      setSuccessMessage('Your subscription has been cancelled successfully. You will continue to have access until the end of your current billing period.');
+      setSuccessMessage(data.details || 'Your subscription has been scheduled for cancellation. You will continue to have access until the end of your current billing period.');
       setShowCancelModal(false);
       
       // Refresh user data to reflect the change
@@ -161,6 +163,44 @@ export default function DashboardPage() {
       setError(err.message || 'Failed to cancel subscription');
     } finally {
       setCancellingSubscription(false);
+    }
+  };
+
+  const handleReactivateSubscription = async () => {
+    if (!user?.email) {
+      setError('User email not found');
+      return;
+    }
+
+    setReactivatingSubscription(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/subscription/reactivate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to reactivate subscription');
+      }
+
+      setSuccessMessage(data.details || 'Your subscription has been reactivated and will continue to renew as normal.');
+      setShowReactivateModal(false);
+      
+      // Refresh user data to reflect the change
+      await fetchUserLinks(user.email);
+      
+    } catch (err) {
+      console.error('Error reactivating subscription:', err);
+      setError(err.message || 'Failed to reactivate subscription');
+    } finally {
+      setReactivatingSubscription(false);
     }
   };
 
@@ -185,6 +225,41 @@ export default function DashboardPage() {
     }
   };
 
+  const getSubscriptionStatusInfo = (status) => {
+    switch (status) {
+      case 'active':
+        return {
+          color: 'green',
+          text: 'Active',
+          description: 'Your subscription is active and will renew automatically.'
+        };
+      case 'scheduled_cancel':
+        return {
+          color: 'yellow',
+          text: 'Scheduled for Cancellation',
+          description: 'Your subscription will cancel at the end of the current billing period. You can reactivate it anytime before then.'
+        };
+      case 'cancelled':
+        return {
+          color: 'red',
+          text: 'Cancelled',
+          description: 'Your subscription has been cancelled and you no longer have access to paid features.'
+        };
+      case 'paused':
+        return {
+          color: 'blue',
+          text: 'Paused',
+          description: 'Your subscription is paused. Billing is stopped until you resume.'
+        };
+      default:
+        return {
+          color: 'gray',
+          text: status || 'Unknown',
+          description: 'Subscription status unknown.'
+        };
+    }
+  };
+
   // Show loading spinner while checking authentication
   if (loading) {
     return (
@@ -198,6 +273,9 @@ export default function DashboardPage() {
   if (!user) {
     return null;
   }
+
+  const subscriptionStatus = userData?.user?.subscription_status;
+  const statusInfo = getSubscriptionStatusInfo(subscriptionStatus);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
@@ -218,13 +296,13 @@ export default function DashboardPage() {
             
             <div className="mb-6">
               <p className="text-gray-600 mb-4">
-                Are you sure you want to cancel your subscription? You will:
+                Are you sure you want to cancel your subscription? Your subscription will be scheduled for cancellation and will:
               </p>
               <ul className="text-sm text-gray-600 space-y-2 ml-4">
-                <li>• Continue to have access until the end of your current billing period</li>
-                <li>• Lose access to paid features after the billing period ends</li>
-                <li>• Be downgraded to the free plan</li>
-                <li>• Be able to reactivate anytime</li>
+                <li>• Continue until the end of your current billing period</li>
+                <li>• Stop automatic renewal</li>
+                <li>• Downgrade you to the free plan when it expires</li>
+                <li>• Allow you to reactivate anytime before it expires</li>
               </ul>
             </div>
 
@@ -244,10 +322,64 @@ export default function DashboardPage() {
                 {cancellingSubscription ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    Cancelling...
+                    Scheduling...
                   </>
                 ) : (
-                  'Yes, Cancel'
+                  'Schedule Cancellation'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reactivation Modal */}
+      {showReactivateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Reactivate Subscription</h3>
+              <button
+                onClick={() => setShowReactivateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={reactivatingSubscription}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-600 mb-4">
+                Welcome back! Reactivating your subscription will:
+              </p>
+              <ul className="text-sm text-gray-600 space-y-2 ml-4">
+                <li>• Cancel the scheduled cancellation</li>
+                <li>• Resume automatic renewal</li>
+                <li>• Continue your paid plan benefits</li>
+                <li>• Keep your current billing cycle</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowReactivateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={reactivatingSubscription}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReactivateSubscription}
+                disabled={reactivatingSubscription}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {reactivatingSubscription ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Reactivating...
+                  </>
+                ) : (
+                  'Reactivate Subscription'
                 )}
               </button>
             </div>
@@ -279,9 +411,7 @@ export default function DashboardPage() {
           <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-8 max-w-2xl mx-auto">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+                <CheckCircle className="w-3 h-3 text-white" />
               </div>
               <p className="text-green-700">{successMessage}</p>
             </div>
@@ -340,8 +470,8 @@ export default function DashboardPage() {
               
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center">
-                    <Badge className="w-5 h-5 text-purple-600" />
+                  <div className={`bg-${statusInfo.color}-100 w-10 h-10 rounded-lg flex items-center justify-center`}>
+                    <Badge className={`w-5 h-5 text-${statusInfo.color}-600`} />
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-gray-900 capitalize">
@@ -354,35 +484,49 @@ export default function DashboardPage() {
             </div>
 
             {/* Subscription Management */}
-            {plan === 'paid' && userData.user.subscription_status === 'active' && (
-              <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Subscription Management</h2>
-                    <p className="text-gray-600">
-                      You are currently on the paid plan. You can cancel your subscription at any time.
+            {plan === 'paid' && subscriptionStatus && (
+              <div className={`bg-${statusInfo.color}-50 border border-${statusInfo.color}-200 rounded-3xl p-8 shadow-xl mb-8`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-8 h-8 bg-${statusInfo.color}-100 rounded-lg flex items-center justify-center`}>
+                        {subscriptionStatus === 'scheduled_cancel' ? (
+                          <Calendar className={`w-4 h-4 text-${statusInfo.color}-600`} />
+                        ) : subscriptionStatus === 'active' ? (
+                          <CheckCircle className={`w-4 h-4 text-${statusInfo.color}-600`} />
+                        ) : (
+                          <AlertCircle className={`w-4 h-4 text-${statusInfo.color}-600`} />
+                        )}
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Subscription Status: {statusInfo.text}
+                      </h2>
+                    </div>
+                    <p className={`text-${statusInfo.color}-700 mb-4`}>
+                      {statusInfo.description}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowCancelModal(true)}
-                    className="px-6 py-3 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-semibold"
-                  >
-                    Cancel Subscription
-                  </button>
+                  
+                  <div className="flex gap-3">
+                    {subscriptionStatus === 'active' && (
+                      <button
+                        onClick={() => setShowCancelModal(true)}
+                        className="px-6 py-3 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-semibold"
+                      >
+                        Cancel Subscription
+                      </button>
+                    )}
+                    
+                    {subscriptionStatus === 'scheduled_cancel' && (
+                      <button
+                        onClick={() => setShowReactivateModal(true)}
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                      >
+                        Reactivate Subscription
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Show cancelled subscription info */}
-            {userData.user.subscription_status === 'cancelled' && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-3xl p-8 shadow-xl mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                  <AlertCircle className="w-6 h-6 text-yellow-600" />
-                  <h2 className="text-xl font-bold text-gray-900">Subscription Cancelled</h2>
-                </div>
-                <p className="text-gray-600">
-                  Your subscription has been cancelled. You will continue to have access to paid features until the end of your current billing period.
-                </p>
               </div>
             )}
 
