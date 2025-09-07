@@ -14,9 +14,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showReactivateModal, setShowReactivateModal] = useState(false);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
-  const [reactivatingSubscription, setReactivatingSubscription] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const plan = useSelector(state => state.plan.value);
 
@@ -166,44 +164,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleReactivateSubscription = async () => {
-    if (!user?.email) {
-      setError('User email not found');
-      return;
-    }
-
-    setReactivatingSubscription(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/subscription/reactivate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: user.email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to reactivate subscription');
-      }
-
-      setSuccessMessage(data.details || 'Your subscription has been reactivated and will continue to renew as normal.');
-      setShowReactivateModal(false);
-      
-      // Refresh user data to reflect the change
-      await fetchUserLinks(user.email);
-      
-    } catch (err) {
-      console.error('Error reactivating subscription:', err);
-      setError(err.message || 'Failed to reactivate subscription');
-    } finally {
-      setReactivatingSubscription(false);
-    }
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
     const date = new Date(dateString);
@@ -237,7 +197,7 @@ export default function DashboardPage() {
         return {
           color: 'yellow',
           text: 'Scheduled for Cancellation',
-          description: 'Your subscription will cancel at the end of the current billing period. You can reactivate it anytime before then.'
+          description: 'Your subscription will cancel at the end of the current billing period.'
         };
       case 'cancelled':
         return {
@@ -302,7 +262,6 @@ export default function DashboardPage() {
                 <li>• Continue until the end of your current billing period</li>
                 <li>• Stop automatic renewal</li>
                 <li>• Downgrade you to the free plan when it expires</li>
-                <li>• Allow you to reactivate anytime before it expires</li>
               </ul>
             </div>
 
@@ -326,60 +285,6 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   'Schedule Cancellation'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reactivation Modal */}
-      {showReactivateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Reactivate Subscription</h3>
-              <button
-                onClick={() => setShowReactivateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-                disabled={reactivatingSubscription}
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-gray-600 mb-4">
-                Welcome back! Reactivating your subscription will:
-              </p>
-              <ul className="text-sm text-gray-600 space-y-2 ml-4">
-                <li>• Cancel the scheduled cancellation</li>
-                <li>• Resume automatic renewal</li>
-                <li>• Continue your paid plan benefits</li>
-                <li>• Keep your current billing cycle</li>
-              </ul>
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowReactivateModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={reactivatingSubscription}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReactivateSubscription}
-                disabled={reactivatingSubscription}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {reactivatingSubscription ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Reactivating...
-                  </>
-                ) : (
-                  'Reactivate Subscription'
                 )}
               </button>
             </div>
@@ -514,15 +419,6 @@ export default function DashboardPage() {
                         className="px-6 py-3 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-semibold"
                       >
                         Cancel Subscription
-                      </button>
-                    )}
-                    
-                    {subscriptionStatus === 'scheduled_cancel' && (
-                      <button
-                        onClick={() => setShowReactivateModal(true)}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                      >
-                        Reactivate Subscription
                       </button>
                     )}
                   </div>
