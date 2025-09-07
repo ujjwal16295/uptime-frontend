@@ -407,7 +407,7 @@ export default function DashboardPage() {
                         Subscription Status: {statusInfo.text}
                       </h2>
                     </div>
-                    <p className={`text-${statusInfo.color}-700 mb-4`}>
+                    <p className={`text-${statusInfo.color}-700 mb-4 text-black`}>
                       {statusInfo.description}
                     </p>
                   </div>

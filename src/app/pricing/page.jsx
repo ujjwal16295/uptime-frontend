@@ -36,7 +36,7 @@ export default function PricingPage() {
   // Initialize Paddle
   useEffect(() => {
     initializePaddle({
-      environment: "sandbox", // Change to "sandbox" for testing
+      environment: "production", // Change to "sandbox" for testing
       token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
       eventCallback: function(data) {
         if (data.name === "checkout.completed") {
