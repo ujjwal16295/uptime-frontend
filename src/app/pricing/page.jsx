@@ -138,7 +138,6 @@ export default function PricingPage() {
           successUrl: window.location.origin + "/dashboard",
         },
         customData: {
-          userId: user.id,
           email: userEmail,
           planType: 'paid'
         }
