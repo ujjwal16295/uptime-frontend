@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle } from 'lucide-react';
+import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { useSelector } from 'react-redux';
 
@@ -191,31 +191,43 @@ export default function DashboardPage() {
         return {
           color: 'green',
           text: 'Active',
-          description: 'Your subscription is active and will renew automatically.'
+          description: 'Your subscription is active and will renew automatically.',
+          icon: CheckCircle
         };
       case 'scheduled_cancel':
         return {
           color: 'yellow',
           text: 'Scheduled for Cancellation',
-          description: 'Your subscription will cancel at the end of the current billing period.'
+          description: 'Your subscription will cancel at the end of the current billing period.',
+          icon: Calendar
         };
       case 'cancelled':
         return {
           color: 'red',
           text: 'Cancelled',
-          description: 'Your subscription has been cancelled and you no longer have access to paid features.'
+          description: 'Your subscription has been cancelled and you no longer have access to paid features.',
+          icon: AlertCircle
         };
       case 'paused':
         return {
           color: 'blue',
           text: 'Paused',
-          description: 'Your subscription is paused. Billing is stopped until you resume.'
+          description: 'Your subscription is paused. Billing is stopped until you resume.',
+          icon: AlertCircle
+        };
+      case 'past_due':
+        return {
+          color: 'red',
+          text: 'Past Due',
+          description: 'Your payment is past due. Please update your payment method to continue using paid features.',
+          icon: CreditCard
         };
       default:
         return {
           color: 'gray',
           text: status || 'Unknown',
-          description: 'Subscription status unknown.'
+          description: 'Subscription status unknown.',
+          icon: AlertCircle
         };
     }
   };
@@ -236,6 +248,7 @@ export default function DashboardPage() {
 
   const subscriptionStatus = userData?.user?.subscription_status;
   const statusInfo = getSubscriptionStatusInfo(subscriptionStatus);
+  const StatusIcon = statusInfo.icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
@@ -395,13 +408,7 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`w-8 h-8 bg-${statusInfo.color}-100 rounded-lg flex items-center justify-center`}>
-                        {subscriptionStatus === 'scheduled_cancel' ? (
-                          <Calendar className={`w-4 h-4 text-${statusInfo.color}-600`} />
-                        ) : subscriptionStatus === 'active' ? (
-                          <CheckCircle className={`w-4 h-4 text-${statusInfo.color}-600`} />
-                        ) : (
-                          <AlertCircle className={`w-4 h-4 text-${statusInfo.color}-600`} />
-                        )}
+                        <StatusIcon className={`w-4 h-4 text-${statusInfo.color}-600`} />
                       </div>
                       <h2 className="text-xl font-bold text-gray-900">
                         Subscription Status: {statusInfo.text}
@@ -421,6 +428,44 @@ export default function DashboardPage() {
                         Cancel Subscription
                       </button>
                     )}
+                    {subscriptionStatus === 'past_due' && (
+                      <button
+                        onClick={() => window.open('https://your-billing-portal-url.com', '_blank')}
+                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                      >
+                        Update Payment Method
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Past Due Users Notification (for free plan users who were downgraded) */}
+            {plan === 'free' && subscriptionStatus === 'past_due' && (
+              <div className="bg-red-50 border border-red-200 rounded-3xl p-8 shadow-xl mb-8">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-4 h-4 text-red-600" />
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Payment Past Due - Account Downgraded
+                      </h2>
+                    </div>
+                    <p className="text-red-700 mb-4 text-black">
+                      Your payment was past due and your account has been downgraded to the free plan. Update your payment method to reactivate your paid subscription.
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => window.open('https://your-billing-portal-url.com', '_blank')}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                    >
+                      Update Payment Method
+                    </button>
                   </div>
                 </div>
               </div>
