@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Trash2, ExternalLink, Activity, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle, CreditCard } from 'lucide-react';
+import { Trash2, ExternalLink, Activity, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle, CreditCard, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { useSelector } from 'react-redux';
 
