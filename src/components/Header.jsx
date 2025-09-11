@@ -204,11 +204,7 @@ export default function Header() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <div className="hidden sm:flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    <Gift className="w-4 h-4" />
-                    <span>Get 21,600 min free!</span>
-                  </div>
-                  
+
                   {/* Navigation dropdown for non-authenticated users */}
                   <div className="relative">
                     <button
