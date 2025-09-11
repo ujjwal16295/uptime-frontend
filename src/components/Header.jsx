@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, ChevronDown, Info, Mail, Activity, CreditCard, FileText, Shield, Code, BarChart3 } from 'lucide-react';
+import { User, LogOut, ChevronDown, Info, Mail, Activity, CreditCard, FileText, Shield, Code, BarChart3, Gift } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 import Image from 'next/image';
 
