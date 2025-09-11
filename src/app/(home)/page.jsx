@@ -1,7 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Clock, Globe, CheckCircle, Copy, Gift, AlertCircle, Server } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { Clock, Globe, CheckCircle, Copy, Gift, Server } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 
 export default function KeepAlivePingService() {
@@ -12,9 +11,6 @@ export default function KeepAlivePingService() {
   const [submitMessage, setSubmitMessage] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Redux state - only get credit from store
-  const { creditDetails } = useSelector((state) => state.credit);
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -250,10 +246,6 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
     window.location.href = '/login';
   };
 
-  const handleCredits = () => {
-    window.location.href = '/credit';
-  };
-
   // Show loading while checking auth
   if (loading) {
     return (
@@ -266,36 +258,8 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
     );
   }
 
-  // Check if user has zero credits - use value from store
-  const hasZeroCredits = creditDetails === 0;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      {/* Zero Credits Alert */}
-      {user && hasZeroCredits && (
-        <div className="bg-red-50 border-b border-red-200">
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between bg-white rounded-lg p-4 border border-red-200 shadow-sm">
-              <div className="flex items-center space-x-3">
-                <div className="bg-red-500 p-2 rounded-full">
-                  <AlertCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-red-800">No Credits Remaining</h3>
-                  <p className="text-red-700 text-sm">You have 0 credits left. Purchase more credits to continue using the ping service.</p>
-                </div>
-              </div>
-              <button
-                onClick={handleCredits}
-                className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2 rounded-lg font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Get Credits
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
@@ -304,7 +268,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
             Prevent your free-tier deployments from going to sleep on Render, Railway, and other platforms. 
-            We ping your app every 10 minutes to keep it running smoothly.
+            We ping your app every 10 minutes to keep it running smoothly - completely free!
           </p>
           
           {/* Login CTA for non-authenticated users */}
@@ -317,13 +281,13 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                 <h3 className="text-xl font-bold text-green-800">Get Started Free!</h3>
               </div>
               <p className="text-green-700 mb-4">
-                Login to get <strong>21,600 minutes</strong> of free credits - that's <strong>15 days</strong> of continuous pinging!
+                Login to start using our <strong>unlimited ping service</strong> - keep your apps running 24/7 at no cost!
               </p>
               <button
                 onClick={handleLogin}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                Login & Get Free Credits
+                Login & Start Free Service
               </button>
             </div>
           )}
@@ -335,7 +299,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             </div>
             <div className="flex items-center space-x-2">
               <Gift className="w-4 h-4" />
-              <span>21,600 min free credits</span>
+              <span>Unlimited & Free</span>
             </div>
             <div className="flex items-center space-x-2">
               <Globe className="w-4 h-4" />
@@ -360,9 +324,9 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
             <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Gift className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Free Credits</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">Completely Free</h3>
             <p className="text-gray-600">
-              Get 21,600 minutes of free credits when you sign up - enough for 15 days of continuous monitoring.
+              Unlimited monitoring service at no cost - keep your applications running 24/7 without any charges.
             </p>
           </div>
           
@@ -468,18 +432,14 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                         onChange={(e) => setBackendUrl(e.target.value)}
                         placeholder="https://your-app.onrender.com/api/health"
                         className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 placeholder-gray-500 ${
-                          !user || hasZeroCredits ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
+                          !user ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''
                         }`}
-                        disabled={isSubmitting || !user || hasZeroCredits}
+                        disabled={isSubmitting || !user}
                       />
                       <p className="text-sm text-gray-500 mt-2">
                         {!user ? (
                           <span className="text-orange-600 font-medium">
-                            Please login to register your application and start using the service
-                          </span>
-                        ) : hasZeroCredits ? (
-                          <span className="text-red-600 font-medium">
-                            You need credits to add applications. Click "Get Credits" to purchase more.
+                            Please login to register your application and start using the free service
                           </span>
                         ) : (
                           "Make sure to include the full URL to your health endpoint (Maximum 3 URLs per account)"
@@ -488,7 +448,7 @@ public ResponseEntity<Map<String, Object>> healthCheck() {
                     </div>
                     <button 
                       onClick={handleSubmit}
-                      disabled={isSubmitting || !user || !backendUrl.trim() || hasZeroCredits}
+                      disabled={isSubmitting || !user || !backendUrl.trim()}
                       className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                       {isSubmitting ? (

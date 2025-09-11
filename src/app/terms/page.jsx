@@ -25,8 +25,8 @@ export default function TermsOfService() {
       title: "3. NapStopper Account Registration and Use",
       icon: Users,
       content: `**NapStopper Account Plans:**
-• **Free Plan**: Up to 3 URLs, 21,600 minutes of initial free credits, additional free credits available through manual requests
-• **Paid Plan**: Up to 3 URLs, unlimited monitoring time for $1 monthly fee
+• **Free Plan**: Up to 3 URLs, unlimited monitoring with pings every 10 minutes
+• **Paid Plan**: Unlimited URLs, unlimited monitoring time with pings every 6 minutes for $1 monthly fee
 • NapStopper reserves the right to limit the total number of users during beta periods`
     },
     {
@@ -34,24 +34,21 @@ export default function TermsOfService() {
       title: "4. NapStopper Service Plans and Pricing",
       icon: CreditCard,
       content: `**4.1 NapStopper Free Plan**
-• Includes 21,600 minutes of free credits upon initial NapStopper registration
-• Limited to 3 registered URLs
+• Unlimited monitoring time for up to 3 registered URLs
 • Pings every 10 minutes
-• Additional free credits must be manually requested through the NapStopper platform
-• Free users must visit the NapStopper website and click "Add Credit" to receive additional free credits (no charge)
-• NapStopper reserves the right to limit or modify free credit distribution at any time
+• No setup fees or hidden charges
+• Always free to use
 
 **4.2 NapStopper Paid Plan**
-• $1 monthly fee for unlimited monitoring time
-• Unlimited URLs
+• $1 monthly fee for unlimited URLs
 • Pings every 6 minutes
-• No need to manually request additional credits
+• Unlimited monitoring time
 • All NapStopper fees are charged in advance
 
 **4.3 NapStopper Plan Cancellation**
 • You may cancel your paid plan at any time through your NapStopper account settings
 • Upon cancellation, your account will be immediately reverted to the free plan
-• You will retain access to the free plan benefits (up to 3 URLs, manual credit requests)
+• You will retain access to the free plan benefits (up to 3 URLs, unlimited monitoring)
 • No refunds will be provided for unused time on paid plans as per the no-refund policy`
     },
     {
@@ -65,18 +62,16 @@ export default function TermsOfService() {
 **5.2 NapStopper No Refund Policy**
 **ALL NAPSTOPPER SALES ARE FINAL. NapStopper does not provide refunds for any purchases, including but not limited to:**
 • The $1 NapStopper paid plan fee
-• Unused NapStopper credits (free users only)
 • NapStopper service cancellations
 • Dissatisfaction with NapStopper service performance
 • Technical issues beyond NapStopper's reasonable control
 • Changes in your hosting requirements
 
-**5.3 NapStopper Credit System**
-• **Free Users**: Credits are consumed based on NapStopper usage (per minute of monitoring). When credits run low, you must manually visit the NapStopper platform and request additional free credits through the "Add Credit" feature
-• **Paid Users**: Unlimited monitoring time after $1  monthly payment to NapStopper
-• Free credits do not expire but are non-transferable and non-refundable
-• You are responsible for monitoring your NapStopper credit balance (free users only)
-• NapStopper reserves the right to modify free credit amounts and distribution methods`
+**5.3 NapStopper Service Billing**
+• **Free Users**: Unlimited monitoring for up to 3 URLs at no cost
+• **Paid Users**: $1 monthly payment for unlimited URLs and enhanced monitoring frequency
+• You are responsible for maintaining valid payment information for paid plans
+• NapStopper reserves the right to modify pricing with 30 days notice`
     },
     {
       id: "acceptable-use",
@@ -100,7 +95,8 @@ export default function TermsOfService() {
       icon: AlertTriangle,
       content: `**7.1 NapStopper Service Level**
 • NapStopper strives to maintain reliable service but does not guarantee 100% uptime
-• NapStopper monitoring frequency is approximately every 10 minutes (may vary slightly)
+• NapStopper monitoring frequency is approximately every 10 minutes for free plans (may vary slightly)
+• NapStopper monitoring frequency is approximately every 6 minutes for paid plans (may vary slightly)
 • NapStopper reserves the right to modify monitoring intervals as needed
 
 **7.2 NapStopper Service Limitations**
@@ -159,11 +155,11 @@ export default function TermsOfService() {
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                <span>NapStopper free plan: 3 URLs, manual credit requests</span>
+                <span>NapStopper free plan: 3 URLs, unlimited monitoring</span>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                <span>NapStopper paid plan: $1 monthly  for unlimited time</span>
+                <span>NapStopper paid plan: $1 monthly for unlimited URLs</span>
               </div>
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>

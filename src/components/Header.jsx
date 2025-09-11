@@ -1,10 +1,7 @@
 "use client"
-import React, { useState, useEffect, useCallback } from 'react';
-import { User, LogOut, Gift, ChevronDown, Info, Mail, RotateCcw, Activity, CreditCard, FileText, Shield, AlertTriangle, Code, BarChart3 } from 'lucide-react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { User, LogOut, ChevronDown, Info, Mail, Activity, CreditCard, FileText, Shield, Code, BarChart3 } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
-import { ChangeCredit } from '../store/CreditSlice'; // Adjust path as needed
-import { clearCreditSession } from '../utils/sessionStorage'; // Adjust path as needed
 import Image from 'next/image';
 
 export default function Header() {
@@ -12,63 +9,6 @@ export default function Header() {
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(false);
-  const [loadingCredit, setLoadingCredit] = useState(false);
-  const [creditFetchError, setCreditFetchError] = useState(false);
-
-  // Redux state and dispatch
-  const dispatch = useDispatch();
-  const { creditDetails, success } = useSelector((state) => state.credit);
-
-  // Backend API base URL - adjust this to your backend URL
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-  // Function to fetch user credit from backend
-  const fetchUserCredit = useCallback(async (email, forceRefetch = false) => {
-    // Don't fetch if already successful and not forcing refetch
-    if (success && !forceRefetch) {
-      return;
-    }
-
-    setLoadingCredit(true);
-    setCreditFetchError(false);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/credit/${encodeURIComponent(email)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Update Redux store with fetched credit and mark as successful
-        dispatch(ChangeCredit({ 
-          creditDetails: data.data.credit, 
-          success: true 
-        }));
-      } else if (response.status === 404) {
-        // User not found, set default credit and mark as successful
-        dispatch(ChangeCredit({ 
-          creditDetails: 21600, 
-          success: true 
-        }));
-      } else {
-        console.error('Failed to fetch user credit');
-        setCreditFetchError(true);
-        // Keep success as false and set default credit
-        dispatch(ChangeCredit({ 
-          creditDetails: 21600, 
-          success: false 
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching user credit:', error);
-      setCreditFetchError(true);
-      // Keep success as false and set default credit
-      dispatch(ChangeCredit({ 
-        creditDetails: 21600, 
-        success: false 
-      }));
-    } finally {
-      setLoadingCredit(false);
-    }
-  }, [API_BASE_URL, dispatch, success, creditDetails]);
 
   // Check authentication status
   useEffect(() => {
@@ -76,11 +16,6 @@ export default function Header() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       setLoading(false);
-      
-      // Fetch user credit if user is logged in
-      if (user?.email) {
-        fetchUserCredit(user.email);
-      }
     };
 
     getUser();
@@ -89,40 +24,18 @@ export default function Header() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Fetch credit when user logs in
-      if (session?.user?.email) {
-        fetchUserCredit(session.user.email);
-      } else {
-        // Clear session storage and reset credit state when user logs out
-        clearCreditSession();
-        dispatch(ChangeCredit({ 
-          creditDetails: 21600, 
-          success: false 
-        }));
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserCredit, dispatch]);
+  }, []);
 
   const handleLogin = () => {
     window.location.href = '/login';
   };
 
-  const handleCredits = () => {
-    window.location.href = '/credit';
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setShowUserMenu(false);
-    // Clear session storage and reset credit state
-    clearCreditSession();
-    dispatch(ChangeCredit({ 
-      creditDetails: 21600, 
-      success: false 
-    }));
   };
 
   const handleAboutUs = () => {
@@ -162,22 +75,6 @@ export default function Header() {
     window.location.href = '/';
   };
 
-  // Handle credit reload
-  const handleCreditReload = () => {
-    if (user?.email) {
-      fetchUserCredit(user.email, true); // Force refetch
-    }
-  };
-
-  // Format credit display
-  const formatCredit = (credit) => {
-    if (credit === null || credit === undefined) return 'Loading...';
-    return credit.toLocaleString();
-  };
-
-  // Check if user has zero credits
-  const hasZeroCredits = creditDetails === 0;
-
   return (
     <>
       {/* Header */}
@@ -187,40 +84,7 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Left spacer for centering */}
             <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleCredits}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                      hasZeroCredits 
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    }`}
-                  >
-                    {loadingCredit ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span>Loading...</span>
-                      </div>
-                    ) : hasZeroCredits ? (
-                      `Get Credits: ${formatCredit(creditDetails)}`
-                    ) : (
-                      `Credits: ${formatCredit(creditDetails)}`
-                    )}
-                  </button>
-                  
-                  {/* Show reload button if credit fetch failed */}
-                  {creditFetchError && !loadingCredit && (
-                    <button
-                      onClick={handleCreditReload}
-                      className="p-1 rounded-full text-red-500 hover:bg-red-50 transition-colors"
-                      title="Reload credits"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              )}
+              {/* Left side content can be added here if needed */}
             </div>
             
             {/* Centered Title - Now Clickable */}
@@ -299,12 +163,12 @@ export default function Header() {
                       </button>
                       <hr className="my-2 border-gray-100" />
                       <button
-  onClick={handleReporting}
-  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
->
-  <BarChart3 className="w-4 h-4" />
-  <span>Report</span>
-</button>
+                        onClick={handleReporting}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span>Report</span>
+                      </button>
                       <button
                         onClick={handleTestEndPoint}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"

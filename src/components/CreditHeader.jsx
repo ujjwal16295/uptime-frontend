@@ -1,9 +1,9 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Gift, User, LogOut, ArrowLeft } from 'lucide-react';
+import { User, LogOut, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Adjust path as needed
 
-export default function CreditHeader() {
+export default function Header() {
   const [user, setUser] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,19 +52,9 @@ export default function CreditHeader() {
               <span className="font-medium">Back to Home</span>
             </button>
             
-            {/* Centered Title */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Credits
-              </h1>
-            </div>
-            
             {/* Right side - Loading */}
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
             </div>
           </div>
         </div>
@@ -75,7 +65,6 @@ export default function CreditHeader() {
   return (
     <>
       {/* Header */}
-      <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -88,16 +77,6 @@ export default function CreditHeader() {
               <span className="font-medium">Back to Home</span>
             </button>
             
-            {/* Centered Title */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Credits
-              </h1>
-            </div>
-            
             {/* Right side - User menu */}
             <div className="flex items-center space-x-4">
               {user ? (
@@ -106,7 +85,7 @@ export default function CreditHeader() {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-3 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-1.5 rounded-full">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-1.5 rounded-full">
                       <User className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-gray-700 font-medium truncate max-w-32">
@@ -138,7 +117,6 @@ export default function CreditHeader() {
           </div>
         </div>
       </header>
-      </div>
 
       {/* Click outside to close menu */}
       {showUserMenu && (

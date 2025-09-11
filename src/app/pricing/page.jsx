@@ -72,16 +72,14 @@ export default function PricingPage() {
   const features = {
     free: [
       { icon: Globe, text: "Up to 3 URLs", included: true },
-      { icon: Clock, text: "Ping every 10 minutes", included: true },
-      { icon: RefreshCw, text: "Manual credit requests", included: true, note: "Add free credits through site" },
-      { icon: X, text: "Unlimited monitoring", included: false },
+      { icon: Clock, text: "Unlimited pings every 10 minutes", included: true },
       { icon: X, text: "Response time charts", included: false },
-      { icon: X, text: "6-minute pings", included: false }
+      { icon: X, text: "6-minute pings", included: false },
+      { icon: X, text: "Priority support", included: false }
     ],
     paid: [
       { icon: Globe, text: "Unlimited URLs", included: true },
-      { icon: Zap, text: "Ping every 6 minutes", included: true },
-      { icon: Check, text: "Unlimited credits", included: true },
+      { icon: Zap, text: "Unlimited pings every 6 minutes", included: true },
       { icon: BarChart3, text: "Response time charts", included: true },
       { icon: Shield, text: "Priority support", included: true },
     ]
@@ -258,7 +256,7 @@ export default function PricingPage() {
               Simple <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Pricing</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Choose the perfect plan for your monitoring needs. Start free and upgrade when you're ready for more power.
+              Choose the perfect plan for your monitoring needs. Both plans offer unlimited monitoring - upgrade for faster pings and advanced features.
             </p>
             
             {/* Authentication Status Indicator */}
@@ -367,14 +365,14 @@ export default function PricingPage() {
                   })}
                 </div>
 
-                {/* Free Credit Notice */}
+                {/* Free Plan Notice */}
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <div className="flex items-center space-x-2 mb-2">
-                    <Gift className="w-4 h-4 text-green-600" />
-                    <span className="font-semibold text-green-800">21,600 Free Minutes</span>
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <span className="font-semibold text-green-800">Unlimited Monitoring</span>
                   </div>
                   <p className="text-green-700 text-sm">
-                    Get started with 15 days of monitoring. Need more? Just visit our site and click "Add Credit" for more free minutes!
+                    Monitor up to 3 URLs with unlimited pings every 10 minutes. No credit limits or restrictions!
                   </p>
                 </div>
               </div>
@@ -494,11 +492,11 @@ export default function PricingPage() {
                 <div className={`space-y-4 ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'opacity-75' : ''}`}>
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-center space-x-2 mb-2">
-                      <BarChart3 className="w-4 h-4 text-blue-600" />
-                      <span className="font-semibold text-blue-800">Response Time Charts</span>
+                      <Zap className="w-4 h-4 text-blue-600" />
+                      <span className="font-semibold text-blue-800">Faster & Unlimited</span>
                     </div>
                     <p className="text-blue-700 text-sm">
-                      Beautiful charts showing your app's performance over time. Track trends and spot issues before they become problems.
+                      Monitor unlimited URLs with faster 6-minute pings. Get detailed response time charts and priority support.
                     </p>
                   </div>
                 </div>
@@ -548,8 +546,10 @@ export default function PricingPage() {
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-4 px-6 font-medium text-gray-900">Monitoring Credits</td>
-                      <td className="py-4 px-6 text-center text-gray-600">Manual requests</td>
+                      <td className="py-4 px-6 font-medium text-gray-900">Monitoring</td>
+                      <td className="py-4 px-6 text-center">
+                        <span className="font-semibold text-green-600">Unlimited</span>
+                      </td>
                       <td className="py-4 px-6 text-center">
                         <span className={`font-semibold ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`}>
                           Unlimited

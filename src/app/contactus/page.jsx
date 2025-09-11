@@ -92,7 +92,6 @@ export default function ContactUsPage() {
             </div>
             <div className="text-gray-600 text-sm space-y-2">
               <p>• Technical support and troubleshooting</p>
-              <p>• Questions about pricing and credits</p>
               <p>• Integration help with your applications</p>
               <p>• Feature requests and feedback</p>
               <p>• General inquiries about NapStopper</p>

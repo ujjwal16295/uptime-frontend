@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Trash2, ExternalLink, Activity, Clock, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle, CreditCard } from 'lucide-react';
+import { Trash2, ExternalLink, Activity, Globe, AlertCircle, RefreshCw, Badge, X, Calendar, CheckCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../../lib/supabase'; // Adjust path as needed
 import { useSelector } from 'react-redux';
 
@@ -349,7 +349,7 @@ export default function DashboardPage() {
         {/* User Stats */}
         {userData && (
           <>
-            <div className="grid md:grid-cols-4 gap-6 mb-12">
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center">
@@ -370,18 +370,6 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-2xl font-bold text-gray-900">{userData.total_pings.toLocaleString()}</p>
                     <p className="text-gray-600 text-sm">Total Pings</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-orange-100 w-10 h-10 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{userData.user.credit.toLocaleString()}</p>
-                    <p className="text-gray-600 text-sm">Credits Left</p>
                   </div>
                 </div>
               </div>
@@ -454,7 +442,7 @@ export default function DashboardPage() {
                         Payment Past Due - Account Downgraded
                       </h2>
                     </div>
-                    <p className="text-red-700 mb-4 text-black">
+                    <p className="mb-4 text-black">
                       Your payment was past due and your account has been downgraded to the free plan. Update your payment method to reactivate your paid subscription.
                     </p>
                   </div>

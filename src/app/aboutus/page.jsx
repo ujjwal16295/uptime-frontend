@@ -65,7 +65,7 @@ export default function AboutUsPage() {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Why Choose Us</h3>
             <p className="text-gray-600">
-              Simple, reliable, and developer-friendly. We offer generous free credits, transparent pricing, 
+              Simple, reliable, and developer-friendly.transparent pricing, 
               and a service that just works - no complex setup or configuration required.
             </p>
           </div>

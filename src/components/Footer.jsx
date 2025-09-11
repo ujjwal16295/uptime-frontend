@@ -8,7 +8,7 @@ export const Footer = () => {
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-lg">
                 <Image
                   src="/logo.png" 
                   alt="NapStopper Logo" 
@@ -20,9 +20,9 @@ export const Footer = () => {
               <h3 className="text-2xl font-bold">NapStopper</h3>
             </div>
             <p className="text-gray-400 mb-6">
-              Keep your free-tier applications running 24/7. Login to get 21,600 minutes of free credits!
+              Keep your free-tier applications running 24/7.
             </p>
-            
+                     
             {/* Terms and Privacy Links */}
             <div className="flex items-center justify-center space-x-6 mb-4">
               <Link 
@@ -39,7 +39,7 @@ export const Footer = () => {
                 Privacy Policy
               </Link>
             </div>
-            
+                     
             <p className="text-gray-500 text-sm">
               © 2025 NapStopper. Made with ❤️ for developers.
             </p>
