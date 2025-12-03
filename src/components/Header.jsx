@@ -62,9 +62,7 @@ export default function Header() {
     window.location.href = '/privacy';
   };
   
-  const handleReporting = () => {
-    window.location.href = '/reporting';
-  };
+
   
   const handleTestEndPoint = () => {
     window.location.href = '/testendpoint';
@@ -162,13 +160,6 @@ export default function Header() {
                         <span>Contact Us</span>
                       </button>
                       <hr className="my-2 border-gray-100" />
-                      <button
-                        onClick={handleReporting}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <span>Report</span>
-                      </button>
                       <button
                         onClick={handleTestEndPoint}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"

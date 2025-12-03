@@ -73,14 +73,12 @@ export default function PricingPage() {
     free: [
       { icon: Globe, text: "Up to 3 URLs", included: true },
       { icon: Clock, text: "Unlimited pings every 10 minutes", included: true },
-      { icon: X, text: "Response time charts", included: false },
       { icon: X, text: "6-minute pings", included: false },
       { icon: X, text: "Priority support", included: false }
     ],
     paid: [
       { icon: Globe, text: "Unlimited URLs", included: true },
       { icon: Zap, text: "Unlimited pings every 6 minutes", included: true },
-      { icon: BarChart3, text: "Response time charts", included: true },
       { icon: Shield, text: "Priority support", included: true },
     ]
   };
@@ -496,7 +494,7 @@ export default function PricingPage() {
                       <span className="font-semibold text-blue-800">Faster & Unlimited</span>
                     </div>
                     <p className="text-blue-700 text-sm">
-                      Monitor unlimited URLs with faster 6-minute pings. Get detailed response time charts and priority support.
+                      Monitor unlimited URLs with faster 6-minute pings and priority support.
                     </p>
                   </div>
                 </div>
@@ -556,15 +554,7 @@ export default function PricingPage() {
                         </span>
                       </td>
                     </tr>
-                    <tr className="bg-gray-50">
-                      <td className="py-4 px-6 font-medium text-gray-900">Response Time Charts</td>
-                      <td className="py-4 px-6 text-center">
-                        <X className="w-5 h-5 text-gray-400 mx-auto" />
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        <Check className={`w-5 h-5 mx-auto ${(isProPlanUnderDevelopment || (!user && !loading)) ? 'text-gray-500' : 'text-orange-600'}`} />
-                      </td>
-                    </tr>
+
                     <tr>
                       <td className="py-4 px-6 font-medium text-gray-900">Priority Support</td>
                       <td className="py-4 px-6 text-center">
