@@ -112,7 +112,7 @@ export default function KeepAlivePingService() {
         
         if (response.status === 403 && data.error === 'Registration closed') {
           console.log('🚫 User limit reached, signing out...');
-          alert(data.message || 'Registration is currently closed. Only 100 people are allowed to join at this time.');
+          alert(data.message || 'Registration is currently closed. Only 500 people are allowed to join at this time.');
           await supabase.auth.signOut();
           window.location.href = '/login';
           return;
